@@ -48,6 +48,8 @@ class Option(object):
 
     @staticmethod
     def get_stages(specs):
+        if specs is None:
+            return
         stages = []
         for spec in specs:
             if '-' in spec:
