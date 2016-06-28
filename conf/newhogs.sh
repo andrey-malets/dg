@@ -9,6 +9,8 @@ part() {
 }
 LOCK=("/root/cow/conf/host/hamming.urgu.org.sh" "/root/xen/windows7.cfg")
 NDD=("/var/lib/cow/image64.urgu.org/cow-image64-local:$(part cow-image64-local)"
-     "/tmp/windows7:$(part windows7)")
+     "/tmp/windows7:$(part windows7)"
+     "uzer-pc:$(part EFI):$(part EFI)+z"
+     "uzer-pc:$(part macos):$(part macos)+z")
 
 ARGS=(-wd windows-data:W)
