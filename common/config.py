@@ -163,11 +163,26 @@ class WithLocalAddress(stage.Stage):
 
 @Option.requires(
     '-n', help='Deploy local INPUT into OUTPUT on all the hosts with ndd',
-    metavar='INPUT:OUTPUT', action='append', default=Option.EMPTY)
+    metavar='{HOST:}?INPUT:OUTPUT{+args}?', action='append',
+    default=Option.EMPTY)
 class WithNDDArgs(stage.Stage):
+    class NDDSpec(object):
+        def __init__(self, spec):
+            if '+' in spec:
+                io, self.args = spec.split('+', 1)
+            else:
+                io = spec
+                self.args = None
+
+            if io.count(':') == 2:
+                self.source, self.input_, self.output = io.split(':', 2)
+            else:
+                self.source = None
+                self.input_, self.output = io.split(':', 1)
+
     def parse(self, args):
         super(WithNDDArgs, self).parse(args)
-        self.ndds = [pair.split(':', 1) for pair in args.n]
+        self.ndds = map(WithNDDArgs.NDDSpec, args.n)
 
 
 @Option.requires(
