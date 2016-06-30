@@ -4,6 +4,7 @@ import sys
 import stage, state
 from util import amt_creds, proc
 
+
 def execute_with(raw_args, methods):
     method_cls, stages = Option.choose_method_and_stages(methods, raw_args)
 
