@@ -9,8 +9,8 @@ class RunNDD(config.WithLocalAddress, config.WithNDDArgs, config.WithConfigURL,
 
     def run(self, state):
         for spec in self.ndds:
-            cmdline = ['python', '/usr/local/bin/ndd.py',
-                       '--input', spec.input_, '--output', spec.output]
+            cmdline = ['python', '/usr/local/bin/ndd.py', '-p', self.ndd_port,
+                       '-i', spec.input_, '-o', spec.output]
             if spec.source:
                 remote_source = cfg.get(self.config_url, spec.source)['name']
                 source = '{}@{}'.format(self.get_login(), remote_source)
@@ -18,7 +18,7 @@ class RunNDD(config.WithLocalAddress, config.WithNDDArgs, config.WithConfigURL,
                 cmdline.extend(['--local'])
                 remote_source = None
                 source = self.local_addr
-            cmdline.extend(['--source', source])
+            cmdline.extend(['-s', source])
 
             if spec.args:
                 cmdline.extend(['-{}'.format(spec.args)])
@@ -28,8 +28,7 @@ class RunNDD(config.WithLocalAddress, config.WithNDDArgs, config.WithConfigURL,
                 if remote_source and host.name == remote_source:
                     continue
                 cmdline.extend(
-                    ['--destination', '{}@{}'.format(
-                        self.get_login(), str(host.name))])
+                    ['-d', '{}@{}'.format(self.get_login(), str(host.name))])
 
             rv, _ = proc.run_process(cmdline, state.log)
             if rv != 0:

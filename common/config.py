@@ -166,6 +166,8 @@ class WithLocalAddress(stage.Stage):
     '-n', help='Deploy local INPUT into OUTPUT on all the hosts with ndd',
     metavar='{HOST:}?INPUT:OUTPUT{+args}?', action='append',
     default=Option.EMPTY)
+@Option.requires(
+    '-np', help='ndd port to use for transfers', metavar='PORT', default='3634')
 class WithNDDArgs(stage.Stage):
     class NDDSpec(object):
         def __init__(self, spec):
@@ -184,6 +186,7 @@ class WithNDDArgs(stage.Stage):
     def parse(self, args):
         super(WithNDDArgs, self).parse(args)
         self.ndds = map(WithNDDArgs.NDDSpec, args.n)
+        self.ndd_port = args.np
 
 
 @Option.requires(

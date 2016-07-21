@@ -72,6 +72,8 @@ for group in "${DG_GROUPS[@]}"; do cmdline+=("-g" "$group"); done
 for host in "${DG_HOSTS[@]}"; do cmdline+=("-H" "$host"); done
 
 for image in "${NDD[@]}"; do cmdline+=("-n" "$image"); done
+if ! [[ -z "$NDD_PORT" ]]; then cmdline+=("-np" "$NDD_PORT"); fi
+
 for host in "${BAN[@]}"; do cmdline+=("-b" "$host"); done
 
 "${cmdline[@]}"
