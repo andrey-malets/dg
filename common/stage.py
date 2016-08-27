@@ -37,13 +37,13 @@ class SimpleStage(Stage):
         pass
 
 
-class ParallelStageFailedError(Exception):
-    def __init__(self, reason=None):
-        self.reason = reason
-
-
 def _run_forked((stage, host)):
-    return stage.run_single(host)
+    try:
+        stage.run_single(host)
+        return stage.failed, stage.failure_reason
+    except Exception as e:
+        host.state.log.exception('Parallel stage failed for {}'.format(host))
+        return True, 'exception occured: {}'.format(e)
 
 
 class ParallelStage(Stage):
@@ -51,6 +51,8 @@ class ParallelStage(Stage):
 
     def __init__(self, poolsize=0):
         self.poolsize = poolsize
+        self.failed = False
+        self.failure_reason = None
 
     def run(self, state):
         try:
@@ -62,16 +64,12 @@ class ParallelStage(Stage):
                 for host in state.active_hosts
             ]
             for host, result in host_to_result:
-                try:
-                    # Timeout is here to handle interruptions properly, otherwise
-                    # it will not work as expected due to bug.
-                    result.get(ParallelStage.HUGE_TIMEOUT)
-                except ParallelStageFailedError as e:
-                    host.fail(self, e.reason)
-                except Exception as e:
-                    state.log.exception(e)
-                    host.fail(self,
-                              'exception occured while running parallel stage')
+                # Timeout is here to handle interruptions properly, otherwise
+                # it will not work as expected due to bug.
+                failed, reason = result.get(ParallelStage.HUGE_TIMEOUT)
+                if failed:
+                    assert reason
+                    host.fail(self, reason)
         except:
             pool.terminate()
             raise
@@ -89,4 +87,5 @@ class ParallelStage(Stage):
         pass
 
     def fail(self, reason):
-        raise ParallelStageFailedError(reason)
+        self.failed = True
+        self.failure_reason = reason

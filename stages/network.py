@@ -33,11 +33,13 @@ class EnsureNetworkSpeed(config.WithLocalAddress,
             if len(tokens) != 9:
                 self.fail(
                     'failed to parse iperf output, it was: {}'.format(output))
+                return
             speed = int(tokens[8]) / 1000000
             if speed < self.minimum:
                 self.fail(
                     ('insufficient network speed: need {} Mbits/s, ' +
                      'got {} Mbits/s').format(self.minimum, speed))
+                return
             elif speed < self.minimum * 1.2:
                 host.state.log.warning(
                     ('measured network speed for {} is {} Mbits/s, ' +
