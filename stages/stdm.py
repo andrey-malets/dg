@@ -78,8 +78,7 @@ class WakeupStdMHosts(StdMStage):
             self.boot_control(
                 host.amt_host,
                 amt_html_rc_radio_group=2, amt_html_rc_boot_special=1)
-            self.wait_until_gets_up(host.amt_host, [5, 10, 10, 15],
-                                    host.state.log)
+            self.wait_until_gets_up(host.amt_host, [5, 10, 15], host.state.log)
 
 
 class ResetStdMHosts(StdMStage):
