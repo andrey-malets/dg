@@ -69,6 +69,14 @@ class CustomizeWindowsSetup(
                 mountpoint, prefix)],
             ['python', '/tmp/customize.py'] + args + [sysprep_xml, sysprep_xml],
         ]
+        hardware = host.props.get('hardware')
+        if hardware:
+            setup = '/mnt/drivers/setup.cmd'
+            cmds.append([
+                'bash -c',
+                '"echo \'call %~dp0setup-impl.cmd {}\' > {}"'.format(
+                    hardware, setup)
+            ])
         if self.win_data_label is not None:
             cmds.append([
                 'sed', '-i',
