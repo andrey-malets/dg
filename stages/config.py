@@ -91,6 +91,8 @@ class CustomizeWindowsSetup(
             cmds.append(['mount', self.get_win7_data_partition(), mountpoint])
             cmds.append(['rm', '-rf', '{}/Users/Administrator*'.format(
                 mountpoint)])
+            cmds.append(['rm', '-rf', '{}/Users/UpdatusUser*'.format(
+                mountpoint)])
             cmds.append(['python', '/tmp/filter_reg.py', '-q',
                          '-f', '".+-500$"',
                          '{}/Users/profiles.reg'.format(mountpoint),
