@@ -41,11 +41,12 @@ class CustomizeWindowsSetup(
     'customize SSH credentials and sysprep config in Windows root partition'
 
     def get_files_to_copy(self, host):
-        files = [
-            (os.path.join(os.path.dirname(__file__), os.path.pardir,
-             'win7', 'customize.py'), '/tmp/customize.py')
-        ]
+        win7 = os.path.join(os.path.dirname(__file__), os.path.pardir, 'win7')
+        files = [(os.path.join(win7, 'customize.py'), '/tmp/customize.py')]
 
+        if self.win_data_label:
+            files.append((os.path.join(win7, 'filter_reg.py'),
+                          '/tmp/filter_reg.py'))
         return files
 
     def get_commands(self, host):
@@ -77,7 +78,7 @@ class CustomizeWindowsSetup(
                 '"echo \'call %~dp0setup-impl.cmd {}\' > {}"'.format(
                     hardware, setup)
             ])
-        if self.win_data_label is not None:
+        if self.win_data_label:
             cmds.append([
                 'sed', '-i',
                 '"s/rem set profiles=/set profiles=' +
@@ -85,4 +86,14 @@ class CustomizeWindowsSetup(
                 '{}/Windows/Setup/Scripts/SetupComplete.cmd'.format(mountpoint)
             ])
         cmds.append(['umount', mountpoint])
+
+        if self.win_data_label:
+            cmds.append(['mount', self.get_win7_data_partition(), mountpoint])
+            cmds.append(['rm', '-rf', '{}/Users/Administrator*'.format(
+                mountpoint)])
+            cmds.append(['python', '/tmp/filter_reg.py', '-q',
+                         '-f', '".+-500$"',
+                         '{}/Users/profiles.reg'.format(mountpoint),
+                         '{}/Users/profiles.reg'.format(mountpoint)])
+            cmds.append(['umount', mountpoint])
         return cmds
