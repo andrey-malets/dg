@@ -2,6 +2,7 @@ import json
 import urllib
 import urllib2
 
+
 def get(base_url, entity):
     reply = urllib2.urlopen('{}/{}'.format(base_url, entity))
     result = json.load(reply)

@@ -1,5 +1,6 @@
 from util import hosts
 
+
 class Method(object):
     stages = []
 
@@ -31,7 +32,7 @@ class Method(object):
                 state.log.warning('failed hosts after "{}": {}'.format(
                     stage, hosts.format_hosts(state.failed_hosts)))
                 state.log.warning('doing rollback for those')
-                for stage in reversed(self.stages[:index+1]):
+                for stage in reversed(self.stages[:index + 1]):
                     try:
                         stage.rollback(state)
                     except Exception as e:

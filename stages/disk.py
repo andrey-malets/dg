@@ -1,6 +1,5 @@
-import subprocess
-
 from common import config, stage
+
 
 class ConfigureDisk(config.WithSSHCredentials, config.WithConfigURL,
                     stage.ParallelStage):

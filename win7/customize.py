@@ -5,12 +5,15 @@ import subprocess
 import sys
 
 
-def ns(name): return '{{urn:schemas-microsoft-com:unattend}}{}'.format(name)
+def ns(name):
+    return '{{urn:schemas-microsoft-com:unattend}}{}'.format(name)
 
 
 def wcm_add(elem, name):
     ns = 'http://schemas.microsoft.com/WMIConfig/2002/State'
-    def wcm_ns(name): return '{{{}}}{}'.format(ns, name)
+
+    def wcm_ns(name):
+        return '{{{}}}{}'.format(ns, name)
 
     sub_elem = etree.SubElement(elem, name, nsmap={'wcm': ns})
     sub_elem.attrib[wcm_ns('action')] = 'add'
@@ -136,7 +139,8 @@ def main(raw_args):
     parser.add_argument(
         '-H', metavar='HOSTNAME',
         help='Set computer name (output of `hostname` will be used if empty')
-    parser.add_argument('-j', metavar='DOMAIN', help='Configure domain to join')
+    parser.add_argument(
+        '-j', metavar='DOMAIN', help='Configure domain to join')
     parser.add_argument(
         '-u', metavar='USER', help='Username to join', default='unix_manager')
     parser.add_argument(

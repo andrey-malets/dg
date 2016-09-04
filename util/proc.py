@@ -1,5 +1,5 @@
-import itertools
 import subprocess
+
 
 def run_process(args, log):
     log.info('running {}'.format(args))

@@ -28,7 +28,9 @@ class ChangeRedirection(config.WithAMTRedirdURL, stage.Stage):
 
 class EnableRedirection(ChangeRedirection):
     'enable IDE-R redirection via amtredird'
-    command = lambda self, hosts: amtredird.start(self.amtredird_url, hosts)
+
+    def command(self, hosts):
+        amtredird.start(self.amtredird_url, hosts)
 
     def rollback(self, state):
         amt_to_host = {}
@@ -44,4 +46,6 @@ class EnableRedirection(ChangeRedirection):
 
 class DisableRedirection(ChangeRedirection):
     'disable IDE-R redirection via amtredird'
-    command = lambda self, hosts: amtredird.stop(self.amtredird_url, hosts)
+
+    def command(self, hosts):
+        amtredird.stop(self.amtredird_url, hosts)

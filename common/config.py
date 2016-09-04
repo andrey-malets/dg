@@ -11,8 +11,8 @@ def execute_with(raw_args, methods):
     if stages == []:
         print >> sys.stderr, 'Stages of "{}" method:'.format(
             method_cls.name)
-        for index, stage in enumerate(method_cls.stages):
-            print >> sys.stderr, '{:-3d}: {}'.format(index, stage)
+        for index, stage_ in enumerate(method_cls.stages):
+            print >> sys.stderr, '{:-3d}: {}'.format(index, stage_)
         return 0
 
     method = method_cls(stages)
@@ -57,7 +57,7 @@ class Option(object):
         for spec in specs:
             if '-' in spec:
                 left, right = spec.split('-')
-                stages.extend(range(int(left), int(right)+1))
+                stages.extend(range(int(left), int(right) + 1))
             else:
                 stages.append(int(spec))
         return stages
@@ -98,9 +98,9 @@ class Option(object):
     @staticmethod
     def add_required(parser, method):
         required = set()
-        for stage in method.stages:
+        for stage_ in method.stages:
             for cls, args, kwargs in Option.requirements:
-                if isinstance(stage, cls):
+                if isinstance(stage_, cls):
                     required.add((args, frozenset(kwargs.items())))
         for args, skwargs in required:
             kwargs = dict(skwargs)
@@ -150,7 +150,7 @@ class WithSSHCredentials(stage.Stage):
         return proc.run_process(
             ['scp', '-o', 'PasswordAuthentication=no',
              src, '{}@{}:{}'.format(login, host, dst)],
-             host.state.log)
+            host.state.log)
 
     def run_ssh(self, host, args, login, opts=None):
         return proc.run_remote_process(
@@ -169,7 +169,8 @@ class WithLocalAddress(stage.Stage):
     metavar='{HOST:}?INPUT:OUTPUT{+args}?', action='append',
     default=Option.EMPTY)
 @Option.requires(
-    '-np', help='ndd port to use for transfers', metavar='PORT', default='3634')
+    '-np', help='ndd port to use for transfers', metavar='PORT',
+    default='3634')
 class WithNDDArgs(stage.Stage):
     class NDDSpec(object):
         def __init__(self, spec):
@@ -210,6 +211,7 @@ class WithWindows7Partition(stage.Stage):
 
     def get_win7_partition(self):
         return '/dev/disk/by-partlabel/{}'.format(self.win7_partition)
+
 
 @Option.requires(
     '-wd', help='Set windows partition volume path by FS label',

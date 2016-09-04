@@ -5,6 +5,7 @@ import requests
 
 from common import config, stage
 
+
 class TParser(HTMLParser.HTMLParser):
 
     def handle_starttag(self, tag, attrs):
@@ -45,12 +46,12 @@ class WakeupStdMHosts(StdMStage):
     def get_status(self, host, log):
         try:
             response_text = self.get(host, 'remote.htm').text
-            on = WakeupStdMHosts.ON_RE.search(response_text) != None
-            off = WakeupStdMHosts.OFF_RE.search(response_text) != None
+            on = WakeupStdMHosts.ON_RE.search(response_text) is not None
+            off = WakeupStdMHosts.OFF_RE.search(response_text) is not None
             assert (on and not off) or (off and not on), \
                 'Host status check failed: on={} off={}'.format(on, off)
             return True, on
-        except Exception as e:
+        except Exception:
             log.exception("Failed to determine host status")
             return False, False
 

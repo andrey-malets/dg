@@ -1,5 +1,5 @@
-import log
 import logging
+
 
 class State(object):
     @staticmethod

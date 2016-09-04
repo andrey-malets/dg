@@ -2,6 +2,7 @@ import argparse
 import os
 import re
 
+
 class RegFile(object):
 
     def __init__(self, version, keys):

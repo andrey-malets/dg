@@ -1,16 +1,16 @@
 import collections
 import datetime
-import itertools
 import time
 
 import boot
 from common import config, stage
 from util import win
 
+
 class Timeouts:
-    TINY   = (datetime.timedelta(seconds=4),  datetime.timedelta(seconds=20))
-    NORMAL = (datetime.timedelta(minutes=1),  datetime.timedelta(minutes=10))
-    BIG    = (datetime.timedelta(minutes=1),  datetime.timedelta(minutes=30))
+    TINY   = (datetime.timedelta(seconds=4), datetime.timedelta(seconds=20))
+    NORMAL = (datetime.timedelta(minutes=1), datetime.timedelta(minutes=10))
+    BIG    = (datetime.timedelta(minutes=1), datetime.timedelta(minutes=30))
 
 
 Command = collections.namedtuple('Command', ('login', 'command'))
@@ -113,4 +113,5 @@ class RebootNonDefaultOS(ExecuteRemoteCommands):
     def get_commands(self, host):
         return ([Command(self.ssh_login_linux, [REBOOT_LINUX])]
                 if boot.BootsToWindowsByDefault(host)
-                else get_win_commands(host, self.ssh_login_windows, REBOOT_WIN))
+                else get_win_commands(host, self.ssh_login_windows,
+                                      REBOOT_WIN))
