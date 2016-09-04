@@ -8,3 +8,5 @@ part() {
 LOCK=("/root/xen/windows7.cfg")
 NDD=("/tmp/windows7:$(part windows7)")
 NDD_PORT=3637
+
+REPORT=(deployment@urgu.org)

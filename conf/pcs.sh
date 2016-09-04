@@ -12,3 +12,5 @@ NDD=("/var/lib/cow/image64.urgu.org/cow-image64-local:$(part cow-image64-local)"
 NDD_PORT=3636
 
 ARGS=(-wd windows-data:W)
+
+REPORT=(deployment@urgu.org)
