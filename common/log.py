@@ -7,6 +7,7 @@ import logging
 import os
 import smtplib
 import socket
+import sys
 import tempfile
 import termcolor
 
@@ -48,7 +49,8 @@ def send_report(args, state, log_file, start, finish):
     dest = ', '.join(sorted(state.groups) + sorted(state.hosts))
     subject = 'Deployment of "{}" with "{}" method finished'.format(
         dest, args.m)
-    text = 'start: {},\nfinish: {}\n'.format(
+    text = 'Command line: {}.\n'.format(' '.join(sys.argv))
+    text += '\nStart: {}.\nFinish: {}.\n'.format(
         start.strftime('%c'), finish.strftime('%c'))
     if len(state.active_hosts) == 0:
         subject += ' (ALL failed)'
