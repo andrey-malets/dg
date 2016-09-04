@@ -1,5 +1,3 @@
-import datetime
-
 from common import method
 from stages import (
     amt, amtredird, basic, boot, config, disk, ndd, network, ssh, stdm

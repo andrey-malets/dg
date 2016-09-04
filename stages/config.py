@@ -1,8 +1,7 @@
-import subprocess
-
 from common import config, stage
-from util import proc, win
+from util import win
 import os
+
 
 class RunCommands(stage.ParallelStage):
     def get_commands(self, host):
@@ -27,7 +26,8 @@ class StoreCOWConfig(config.WithSSHCredentials, RunCommands):
     def get_commands(self, host):
         return map(lambda cmd: ['/root/cow/conf.sh'] + cmd, [
             ['mkdir', '-p', '{}/puppet/certs', '{}/puppet/private_keys'],
-            ['cp', '-a', '/var/lib/puppet/ssl/certs/ca.pem', '{}/puppet/certs'],
+            ['cp', '-a', '/var/lib/puppet/ssl/certs/ca.pem',
+             '{}/puppet/certs'],
             ['cp', '-a', '/var/lib/puppet/ssl/certs/{}.pem'.format(host.name),
              '{}/puppet/certs'],
             ['cp', '-a', '/var/lib/puppet/ssl/private_keys/{}.pem'.format(
@@ -68,7 +68,8 @@ class CustomizeWindowsSetup(
             ['mount', self.get_win7_partition(), mountpoint],
             ['cp /etc/ssh/ssh_host_*_key{{,.pub}} {}{}'.format(
                 mountpoint, prefix)],
-            ['python', '/tmp/customize.py'] + args + [sysprep_xml, sysprep_xml],
+            ['python', '/tmp/customize.py'] + args + [sysprep_xml,
+                                                      sysprep_xml],
         ]
         hardware = host.props.get('hardware')
         if hardware:

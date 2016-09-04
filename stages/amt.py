@@ -4,6 +4,7 @@ import os.path
 from clients import config as cfg
 from common import config, stage
 
+
 class DetermineAMTHosts(config.WithConfigURL, stage.SimpleStage):
     'determine AMT hosts'
 

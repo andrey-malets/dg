@@ -1,5 +1,3 @@
-import datetime
-
 from common import method
 from stages import basic, boot, config, ndd, network, ssh
 

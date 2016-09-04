@@ -1,6 +1,7 @@
 from clients import amtredird
 from common import config, stage
 
+
 class EnsureRedirectionPossible(config.WithAMTRedirdURL, stage.Stage):
     'ensure amtrerid has the hosts required'
 
@@ -8,7 +9,7 @@ class EnsureRedirectionPossible(config.WithAMTRedirdURL, stage.Stage):
         possible_hosts = set(amtredird.list(self.amtredird_url))
         for host in list(state.active_hosts):
             assert host.amt_host
-            if not host.amt_host in possible_hosts:
+            if host.amt_host not in possible_hosts:
                 host.fail(self, 'AMT host not configured in amtredird')
 
 
@@ -21,7 +22,8 @@ class ChangeRedirection(config.WithAMTRedirdURL, stage.Stage):
         results = self.__class__.command(self, amt_to_host.keys())
         for amt_host, (result, args) in results.iteritems():
             if result != 0:
-                amt_to_host[amt_host].fail(self, 'failed to change redirection')
+                amt_to_host[amt_host].fail(self,
+                                           'failed to change redirection')
 
 
 class EnableRedirection(ChangeRedirection):

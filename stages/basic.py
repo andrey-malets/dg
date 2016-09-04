@@ -1,6 +1,7 @@
 from clients import config as cfg
 from common import config, host, stage
 
+
 class InitHosts(config.WithConfigURL, stage.Stage):
     'get initial host list'
 
@@ -20,7 +21,7 @@ class ExcludeBannedHosts(config.WithBannedHosts, stage.Stage):
     'exclude banned hosts from deployment'
 
     def run(self, state):
-        for host in list(state.active_hosts):
+        for host_ in list(state.active_hosts):
             if any(map(lambda name: name in self.banned_hosts,
-                       [host.name, host.sname])):
+                       [host_.name, host_.sname])):
                 host.fail(self, 'explicitly excluded from deployment')
