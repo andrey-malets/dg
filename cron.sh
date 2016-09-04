@@ -76,4 +76,8 @@ if ! [[ -z "$NDD_PORT" ]]; then cmdline+=("-np" "$NDD_PORT"); fi
 
 for host in "${BAN[@]}"; do cmdline+=("-b" "$host"); done
 
+if [[ "${#STAGES[@]}" > 0 ]]; then cmdline+=("-s" "${STAGES[@]}"); fi
+
+for address in "${REPORT[@]}"; do cmdline+=("-r" "$address"); done
+
 "${cmdline[@]}"
