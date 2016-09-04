@@ -1,7 +1,7 @@
 import argparse
 import sys
 
-import stage, state
+import log, stage, state
 from util import amt_creds, proc
 
 
@@ -9,7 +9,7 @@ def execute_with(raw_args, methods):
     method_cls, stages = Option.choose_method_and_stages(methods, raw_args)
 
     if stages == []:
-        print >> sys.stderr, 'Available stages for "{}" method:'.format(
+        print >> sys.stderr, 'Stages of "{}" method:'.format(
             method_cls.name)
         for index, stage in enumerate(method_cls.stages):
             print >> sys.stderr, '{:-3d}: {}'.format(index, stage)
@@ -22,7 +22,8 @@ def execute_with(raw_args, methods):
     method.parse(method_args)
     the_state = state.State(parser, method_args)
 
-    return 0 if method.run(the_state) else 1
+    with log.capturing(method_args, the_state):
+        return 0 if method.run(the_state) else 1
 
 
 class Option(object):
@@ -39,6 +40,7 @@ class Option(object):
     @staticmethod
     def add_common_params(parser, method_classes):
         state.State.add_params(parser)
+        log.add_params(parser)
         parser.add_argument(
             '-m', choices=[method.name for method in method_classes],
             help='Deploy method', required=True)

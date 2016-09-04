@@ -10,8 +10,6 @@ class State(object):
         parser.add_argument(
             '-g', metavar='GROUP', help='Group(s) to deploy',
             default=[], action='append')
-        parser.add_argument(
-            '-C', help='Colored log output', default=False, action='store_true')
 
     def __init__(self, parser, args):
         self.hosts, self.groups = args.H, args.g
@@ -21,7 +19,6 @@ class State(object):
         self.active_hosts = set()
         self.failed_hosts = set()
         self.all_failed_hosts = set()
-        log.init(self.log, args.C)
 
     @property
     def log(self):
