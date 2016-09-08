@@ -16,7 +16,7 @@ class TParser(HTMLParser.HTMLParser):
 
 class StdMStage(config.WithAMTCredentials, stage.ParallelStage):
     ON_RE = re.compile('Power state: On')
-    OFF_RE = re.compile('Power state: Off')
+    OFF_RE = re.compile('Power state: (Off|Standby)')
 
     def make_request(self, method, host, url, validate=True, **args):
         response = method('http://{}:16992/{}'.format(host, url),
