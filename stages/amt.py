@@ -17,12 +17,15 @@ class DetermineAMTHosts(config.WithConfigURL, stage.SimpleStage):
 
 
 class AMTStage(config.WithAMTCredentials, stage.SimpleStage):
-    def call_amttool(self, host, cmd):
+    def call_amttool(self, host, cmd, special=None):
         AMTTOOL = os.path.join(os.path.dirname(__file__), os.path.pardir,
                                'clients', 'amttool')
         user, passwd = self.amt_creds.get_credentials(host)
+        cmdline = ['/usr/bin/perl', AMTTOOL, host, cmd]
+        if special:
+            cmdline.append(special)
         return subprocess.check_output(
-            ['/usr/bin/perl', AMTTOOL, host, cmd],
+            cmdline,
             env={'AMT_USER': user, 'AMT_PASSWORD': passwd})
 
 
@@ -39,10 +42,10 @@ class WakeupAMTHosts(AMTStage):
 
 
 class ResetAMTHosts(AMTStage):
-    'reset hosts via AMT interface'
+    'reset hosts via AMT interface and boot to PXE'
 
     def run_single(self, host):
         try:
-            self.call_amttool(host.amt_host, 'reset')
+            self.call_amttool(host.amt_host, 'reset', 'pxe')
         except Exception:
             host.fail(self, 'call to amttool failed')
