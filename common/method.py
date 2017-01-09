@@ -37,7 +37,8 @@ class Method(object):
                         stage.rollback(state)
                     except Exception as e:
                         state.log.exception(e)
-                        state.log.error('rollback of "{}" failed')
+                        state.log.error(
+                            'rollback of "{}" failed'.format(stage))
                 state.all_failed_hosts.update(state.failed_hosts)
                 state.failed_hosts.clear()
 
