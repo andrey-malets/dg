@@ -14,7 +14,8 @@ def run_process(args, log):
 
 
 def run_remote_process(host, login, args, log, opts):
-    cmdline = ['ssh', '-l', login, '-o', 'PasswordAuthentication=no']
+    cmdline = ['ssh', '-l', login,
+               '-o', 'PasswordAuthentication=no', '-o', 'BatchMode=yes']
     if opts is not None:
         for opt in opts:
             cmdline.extend(['-o', opt])
