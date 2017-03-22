@@ -1,7 +1,7 @@
 METHOD=simple
 DG_HOSTS=(canion cuda-pc stream-pc packard znick-pc)
 DG_GROUPS=(asus)
-LOCAL_ADDRESS=172.16.10.228
+LOCAL_ADDRESS=212.193.68.251
 
 part() {
     echo "/dev/disk/by-partlabel/$1"

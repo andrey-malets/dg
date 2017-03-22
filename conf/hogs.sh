@@ -1,7 +1,7 @@
 METHOD=stdm
 DG_HOSTS=(uzer-pc)
 DG_GROUPS=(hogs)
-LOCAL_ADDRESS=172.16.12.101
+LOCAL_ADDRESS=212.193.68.251
 AMTPASSWD=/root/dg/amtpasswd
 
 part() {
