@@ -18,10 +18,13 @@ class StdMStage(config.WithAMTCredentials, stage.ParallelStage):
     ON_RE = re.compile('Power state: On')
     OFF_RE = re.compile('Power state: (Off|Standby)')
 
+    TIMEOUT = 5
+
     def make_request(self, method, host, url, validate=True, **args):
         response = method('http://{}:16992/{}'.format(host, url),
                           auth=requests.auth.HTTPDigestAuth(
                               *self.amt_creds.get_credentials(host)),
+                          timeout=self.TIMEOUT,
                           **args)
         if validate:
             response.raise_for_status()
