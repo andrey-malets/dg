@@ -9,7 +9,7 @@ from util import win
 
 class Timeouts:
     TINY   = (datetime.timedelta(seconds=4), datetime.timedelta(seconds=20))
-    NORMAL = (datetime.timedelta(minutes=1), datetime.timedelta(minutes=10))
+    NORMAL = (datetime.timedelta(minutes=1), datetime.timedelta(minutes=15))
     BIG    = (datetime.timedelta(minutes=1), datetime.timedelta(minutes=30))
 
 
