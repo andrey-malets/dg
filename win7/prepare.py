@@ -2,7 +2,6 @@
 
 import argparse
 import datetime
-import functools
 import logging
 import os
 import os.path
@@ -13,7 +12,7 @@ import time
 
 class Timeouts:
     SMALL = datetime.timedelta(minutes=1)
-    BIG   = datetime.timedelta(minutes=10)
+    BIG = datetime.timedelta(minutes=10)
 
 
 def setup_logging():
@@ -107,7 +106,7 @@ class SSHClient(object):
         self.login = login
 
     def ssh(self, *cmd):
-        cmdline = ['ssh', '-o', 'ConnectTimeout=5',
+        cmdline = ['ssh', '-o', 'ConnectTimeout=3',
                    '-l', self.login, self.host] + list(cmd)
         logging.info('running {}'.format(cmdline))
         return subprocess.check_output(cmdline)
@@ -126,15 +125,15 @@ class SSHClient(object):
             return False
 
 
-def wait_for_ssh(client, total, step=datetime.timedelta(seconds=10)):
+def wait_for_ssh(client, total, step=datetime.timedelta(seconds=3)):
     logging.info('waiting for ssh to come up on {}'.format(client.host))
     return wait_for_condition(
         total=total, step=step,
         check=lambda: client.is_ready(),
         step_msg='{}@{} is not accessible yet'.format(
             client.login, client.host),
-        fail_msg='timed out while waiting for {}@{} to become available'.format(
-             client.login, client.host))
+        fail_msg=('timed out while waiting for {}@{} '
+                  'to become available'.format(client.login, client.host)))
 
 
 def copy_setup_scripts(client, scripts):
@@ -148,11 +147,11 @@ def copy_setup_scripts(client, scripts):
 
 def start_sysprep(client, sysprep_xml):
     logging.info('starting sysprep with {}'.format(sysprep_xml))
-    sysprep = '/cygdrive/c/Windows/system32/sysprep/sysprep.exe'
+    sysprep = r'C:\\Windows\\system32\\sysprep\\sysprep.exe'
     cygwin_path = '/cygdrive/c/Users/{}/sysprep.xml'.format(client.login)
     windows_path = r'C:\\Users\\{}\\sysprep.xml'.format(client.login)
     client.scp(sysprep_xml, cygwin_path)
-    client.ssh('screen', '-d', '-m', '-S', 'sysprep',
+    client.ssh('cmd', '/c', 'start', '/w',
                sysprep, '/oobe', '/generalize', '/shutdown',
                '/unattend:{}'.format(windows_path))
 
@@ -176,7 +175,7 @@ def main(raw_args):
 
     parser.add_argument('CONFIG', help='path to ref VM config file')
     parser.add_argument('SNAP_CONFIG',
-        help='path to snapshot config file for prepared VM')
+                        help='path to snapshot config file for prepared VM')
     parser.add_argument(
         '-d', metavar='INDEX', type=int, default=0,
         help='Index of VM disk in config file to make snapshot of')
@@ -256,8 +255,8 @@ def main(raw_args):
         if args.t:
             test_vm_name = '{}-test'.format(vm_name)
             logging.warning('starting vm "{}" for test'.format(test_vm_name))
-            write_snapshot_config(config, test_vm_name, disks, args.SNAP_CONFIG,
-                                  should_exist=True)
+            write_snapshot_config(config, test_vm_name, disks,
+                                  args.SNAP_CONFIG, should_exist=True)
             subprocess.check_call(['xl', 'create', args.SNAP_CONFIG])
         else:
             logging.info('starting {} back'.format(vm_name))
