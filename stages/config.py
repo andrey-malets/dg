@@ -37,7 +37,8 @@ class StoreCOWConfig(config.WithSSHCredentials, RunCommands):
 
 class CustomizeWindowsSetup(
         config.WithSSHCredentials, config.WithWindows7Partition,
-        config.WithWindowsDataPartition, RunCommands):
+        config.WithWindowsDataPartition, config.WithWindowsDriverSearchPath,
+        RunCommands):
     'customize SSH credentials and sysprep config in Windows root partition'
 
     def get_files_to_copy(self, host):
@@ -56,6 +57,8 @@ class CustomizeWindowsSetup(
                 '-j', 'runc.urgu.org', '-p', '/etc/smb.pwd']
         if 'userqwer' in host.props['services']:
             args += ['-a', 'user:qwer', '-A', 'user:qwer']
+        if self.driver_path:
+            args += ['-d', self.driver_path]
         sysprep_xml = '{}/Windows/Panther/unattend.xml'.format(mountpoint)
         if self.win_data_label is not None:
             args += ['-c', r'"{} {} {}:\\"'.format(

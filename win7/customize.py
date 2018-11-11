@@ -9,7 +9,7 @@ def ns(name):
     return '{{urn:schemas-microsoft-com:unattend}}{}'.format(name)
 
 
-def wcm_add(elem, name):
+def wcm_add(elem, name, key_value=None):
     ns = 'http://schemas.microsoft.com/WMIConfig/2002/State'
 
     def wcm_ns(name):
@@ -17,6 +17,8 @@ def wcm_add(elem, name):
 
     sub_elem = etree.SubElement(elem, name, nsmap={'wcm': ns})
     sub_elem.attrib[wcm_ns('action')] = 'add'
+    if key_value:
+        sub_elem.attrib[wcm_ns('keyValue')] = key_value
     return sub_elem
 
 
@@ -92,6 +94,18 @@ def add_local_admin(tree, username, password):
     get_prop(get_prop(user, 'Password'), 'PlainText').text = 'true'
 
 
+def add_driver_paths(tree, paths):
+    if paths:
+        driver_paths = get(tree, 'offlineServicing',
+                           'Microsoft-Windows-PnpCustomizationsNonWinPE',
+                           'DriverPaths')
+        for i, path in enumerate(paths):
+            path_elem = etree.Element('Path')
+            path_elem.text = path
+            wcm_add(driver_paths, 'PathAndCredentials',
+                    key_value=str(i + 1)).append(path_elem)
+
+
 def add_auto_login(tree, username, password):
     auto_logon = get(tree, 'oobeSystem', 'Microsoft-Windows-Shell-Setup',
                      'AutoLogon')
@@ -102,7 +116,7 @@ def add_auto_login(tree, username, password):
 
 
 def add_specialize_commands(tree, commands):
-    if len(commands) > 0:
+    if commands:
         run_synchro = get(tree, 'specialize', 'Microsoft-Windows-Deployment',
                           'RunSynchronous')
         for index, cmdline in enumerate(commands):
@@ -149,6 +163,8 @@ def main(raw_args):
                         default=[], action='append')
     parser.add_argument(
         '-A', metavar='USER:PASS', help='Auto-login specified user')
+    parser.add_argument('-d', metavar='PATH', help='Add PATH to DriverPaths',
+                        default=[], action='append')
 
     parser.add_argument(
         '-c', metavar='COMMAND', help='Commands to run on specialize stage',
@@ -160,6 +176,8 @@ def main(raw_args):
     with xml_tree(args.SRC, args.DEST) as tree:
         if args.H is not None:
             set_computer_name(tree, get_hostname(args.H))
+        if args.d:
+            add_driver_paths(tree, args.d)
         if args.j:
             if args.p is None:
                 parser.error('-p must be specified in order to add join')

@@ -223,3 +223,12 @@ class WithWindowsDataPartition(stage.Stage):
 
     def get_win7_data_partition(self):
         return '/dev/disk/by-partlabel/{}'.format(self.win_data_label)
+
+
+@Option.requires(
+    '-d', help='Set windows driver search path',
+    metavar='PATH', default=None)
+class WithWindowsDriverSearchPath(stage.Stage):
+    def parse(self, args):
+        super(WithLocalAddress, self).parse(args)
+        self.driver_path = args.d

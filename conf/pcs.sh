@@ -11,6 +11,6 @@ NDD=("/var/lib/cow/image64.urgu.org/cow-image64-local:$(part cow-image64-local)"
      "/tmp/windows7:$(part windows7)")
 NDD_PORT=3636
 
-ARGS=(-wd windows-data:W)
+ARGS=(-wd windows-data:W -d C:\\drivers)
 
 REPORT=(deployment@urgu.org)
