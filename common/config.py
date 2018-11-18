@@ -218,6 +218,7 @@ class WithWindows7Partition(stage.Stage):
     metavar='LABEL:LETTER', default=None)
 class WithWindowsDataPartition(stage.Stage):
     def parse(self, args):
+        super(WithWindowsDataPartition, self).parse(args)
         self.win_data_label, self.win_data_letter = (
             args.wd.split(':', 1) if args.wd is not None else [None, None])
 
@@ -230,5 +231,5 @@ class WithWindowsDataPartition(stage.Stage):
     metavar='PATH', default=None)
 class WithWindowsDriverSearchPath(stage.Stage):
     def parse(self, args):
-        super(WithLocalAddress, self).parse(args)
+        super(WithWindowsDriverSearchPath, self).parse(args)
         self.driver_path = args.d
