@@ -24,4 +24,4 @@ class ExcludeBannedHosts(config.WithBannedHosts, stage.Stage):
         for host_ in list(state.active_hosts):
             if any(map(lambda name: name in self.banned_hosts,
                        [host_.name, host_.sname])):
-                host.fail(self, 'explicitly excluded from deployment')
+                host_.fail(self, 'explicitly excluded from deployment')
