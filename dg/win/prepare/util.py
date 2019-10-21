@@ -16,6 +16,10 @@ def temporary_file(**tempfile_args):
         os.remove(file_.name)
 
 
+class Timeout(RuntimeError):
+    pass
+
+
 def wait_for_condition(total, step, check, step_msg, fail_msg):
     start = datetime.datetime.now()
     while datetime.datetime.now() - start < total:
@@ -25,8 +29,7 @@ def wait_for_condition(total, step, check, step_msg, fail_msg):
             logging.info('{}, sleeping for {} seconds'.format(
                 step_msg, step.seconds))
             time.sleep(step.seconds)
-    logging.error(fail_msg)
-    return False
+    raise RuntimeError(fail_msg)
 
 
 def parse_xl_config(filename):

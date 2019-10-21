@@ -47,6 +47,10 @@ def xen_vm_with_alternate_disk(vm_config_filename, name, index, disk):
 
         try:
             yield
+        except Exception:
+            logging.warning('Trying to destroy %s', name)
+            subprocess.call(['xl', 'destroy', name])
+            raise
         finally:
             for disk in util.get_hard_disks(xl_config):
                 lv.wait_for_lv_to_free(disk, DISK_FREE_TIMEOUT)
