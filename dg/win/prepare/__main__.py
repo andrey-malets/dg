@@ -14,8 +14,8 @@ from dg.win.prepare import vm
 
 
 STARTUP_TIMEOUT = datetime.timedelta(minutes=5)
-SYSPREP_START_TIMEOUT = datetime.timedelta(minutes=5)
-SPECIALIZE_TIMEOUT = datetime.timedelta(minutes=15)
+SYSPREP_START_TIMEOUT = datetime.timedelta(minutes=10)
+SPECIALIZE_TIMEOUT = datetime.timedelta(minutes=20)
 
 
 def parse_args(raw_args):
