@@ -2,6 +2,8 @@ import datetime
 import logging
 import subprocess
 
+import psutil
+
 from dg.win.prepare import util
 
 
@@ -10,11 +12,25 @@ class SSHClient(object):
         self.host = host
         self.login = login
 
-    def ssh(self, *cmd):
+    def ssh(self, cmd, timeout=None):
         cmdline = ['ssh', '-o', 'ConnectTimeout=3',
-                   '-l', self.login, self.host] + list(cmd)
+                   '-l', self.login, self.host] + cmd
         logging.info('running {}'.format(cmdline))
-        return subprocess.check_output(cmdline)
+        proc = psutil.Popen(cmdline, stdout=subprocess.PIPE)
+        try:
+            proc.wait(timeout.total_seconds() if timeout else None)
+        except psutil.TimeoutExpired:
+            try:
+                proc.kill()
+                proc.wait()
+            except psutil.NoSuchProcess:
+                pass
+            raise
+
+        output = proc.stdout.read()
+        if proc.returncode != 0:
+            raise subprocess.CalledProcessError(proc.returncode, cmd, output)
+        return output
 
     def scp(self, src, dest):
         cmdline = ['scp', '-o', 'ConnectTimeout=5',
@@ -24,7 +40,7 @@ class SSHClient(object):
 
     def is_ready(self):
         try:
-            self.ssh('exit')
+            self.ssh(['exit'])
             return True
         except subprocess.CalledProcessError:
             return False

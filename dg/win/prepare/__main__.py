@@ -14,6 +14,7 @@ from dg.win.prepare import vm
 
 
 STARTUP_TIMEOUT = datetime.timedelta(minutes=5)
+SYSPREP_START_TIMEOUT = datetime.timedelta(minutes=5)
 SPECIALIZE_TIMEOUT = datetime.timedelta(minutes=15)
 
 
@@ -99,7 +100,8 @@ def main(raw_args):
     ssh_client.wait_ssh_ready(STARTUP_TIMEOUT)
 
     def shutdown():
-        ssh_client.ssh('shutdown', '/s', '/t', '0')
+        logging.info('Shutdown output: %s', ssh_client.ssh(
+            ['shutdown', '/s', '/t', '0']))
 
     with contextlib2.ExitStack() as stack:
         stack.enter_context(vm.xen_vm_shut_down(shutdown, args.CONFIG))
@@ -110,7 +112,8 @@ def main(raw_args):
                                            args.d, disk_snapshot_name):
             ssh_client.wait_ssh_ready(STARTUP_TIMEOUT)
             sysprep.copy_setup_scripts(ssh_client, args.ss)
-            sysprep.start_sysprep(ssh_client, args.SYSPREP_XML)
+            sysprep.start_sysprep(ssh_client, args.SYSPREP_XML,
+                                  SYSPREP_START_TIMEOUT)
 
         if args.t:
             logging.info('Starting VM from "sysprepped" snapshot for test')
