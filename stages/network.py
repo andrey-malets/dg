@@ -1,3 +1,4 @@
+import contextlib
 import subprocess
 
 from common import config, stage
@@ -9,16 +10,23 @@ class EnsureNetworkSpeed(config.WithLocalAddress,
     'ensure sufficient throughput of network interface'
 
     def __init__(self, poolsize=3, minimum=150, time=5):
-        stage.ParallelStage.__init__(self, poolsize)
+        super().__init__(poolsize)
         self.minimum = minimum
         self.time = time
         self.server = None
 
-    def setup(self):
-        self.server = subprocess.Popen(
+    @contextlib.contextmanager
+    def prepared(self):
+        server = subprocess.Popen(
             ['iperf', '-s'], stdout=subprocess.DEVNULL,
             stderr=subprocess.STDOUT
         )
+        try:
+            with super().prepared():
+                yield
+        finally:
+            server.terminate()
+            server.wait()
 
     def run_single(self, host):
         rv, output = self.run_ssh(
@@ -48,7 +56,3 @@ class EnsureNetworkSpeed(config.WithLocalAddress,
                 host.state.log.info(
                     'measured network speed for {} is {} Mbits/s'.format(
                         host.name, speed))
-
-    def teardown(self):
-        self.server.terminate()
-        self.server = None

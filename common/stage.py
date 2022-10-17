@@ -1,3 +1,4 @@
+import contextlib
 import multiprocessing
 
 
@@ -60,33 +61,31 @@ class ParallelStage(Stage):
         try:
             pool = multiprocessing.Pool(
                 self.poolsize if self.poolsize else len(state.active_hosts))
-            self.setup()
-            host_to_result = [
-                (host, pool.apply_async(_run_forked, [(self, host)]))
-                for host in state.active_hosts
-            ]
-            for host, result in host_to_result:
-                # Timeout is here to handle interruptions properly, otherwise
-                # it will not work as expected due to bug.
-                failed, reason = result.get(ParallelStage.HUGE_TIMEOUT)
-                if failed:
-                    assert reason
-                    host.fail(self, reason)
+
+            with self.prepared():
+                host_to_result = [
+                    (host, pool.apply_async(_run_forked, [(self, host)]))
+                    for host in state.active_hosts
+                ]
+                for host, result in host_to_result:
+                    # Timeout is here to handle interruptions properly,
+                    # otherwise it will not work as expected due to bug.
+                    failed, reason = result.get(ParallelStage.HUGE_TIMEOUT)
+                    if failed:
+                        assert reason
+                        host.fail(self, reason)
         except BaseException:
             pool.terminate()
             raise
         finally:
-            self.teardown()
             pool.close()
 
     def run_single(self, host):
         return False, 'Not implemented.'
 
-    def setup(self):
-        pass
-
-    def teardown(self):
-        pass
+    @contextlib.contextmanager
+    def prepared(self):
+        yield
 
     def fail(self, reason):
         self.failed = True
