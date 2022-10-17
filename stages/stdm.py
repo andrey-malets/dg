@@ -92,3 +92,4 @@ class ResetStdMHosts(StdMStage):
         self.boot_control(
             host.amt_host,
             amt_html_rc_radio_group=4, amt_html_rc_boot_special=1)
+        time.sleep(20)
