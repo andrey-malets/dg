@@ -2,15 +2,15 @@ import collections
 import datetime
 import time
 
-import boot
+from . import boot
 from common import config, stage
 from util import win
 
 
 class Timeouts:
-    TINY   = (datetime.timedelta(seconds=4), datetime.timedelta(seconds=20))
+    TINY = (datetime.timedelta(seconds=4), datetime.timedelta(seconds=20))
     NORMAL = (datetime.timedelta(minutes=1), datetime.timedelta(minutes=15))
-    BIG    = (datetime.timedelta(minutes=1), datetime.timedelta(minutes=30))
+    BIG = (datetime.timedelta(minutes=1), datetime.timedelta(minutes=30))
 
 
 Command = collections.namedtuple('Command', ('login', 'command'))
@@ -18,12 +18,12 @@ Command = collections.namedtuple('Command', ('login', 'command'))
 
 REBOOT_MARKER = '/tmp/rebooting'
 
-CHECK_WIN  = 'uname | grep -q NT'
+CHECK_WIN = 'uname | grep -q NT'
 REBOOT_WIN = 'shutdown /r /t 0'
 
-CHECK_LINUX     = '! test -f {}'.format(REBOOT_MARKER)
+CHECK_LINUX = '! test -f {}'.format(REBOOT_MARKER)
 CHECK_LINUX_MEM = 'grep -q cowtype=mem /proc/cmdline && ' + CHECK_LINUX
-REBOOT_LINUX    = 'touch {} && shutdown -r'.format(REBOOT_MARKER)
+REBOOT_LINUX = 'touch {} && shutdown -r'.format(REBOOT_MARKER)
 
 
 class ExecuteRemoteCommands(config.WithSSHCredentials, stage.ParallelStage):
@@ -65,8 +65,8 @@ class WaitUntilBootedIntoCOWMemory(ExecuteRemoteCommands):
 
 
 def get_win_commands(host, login, cmd):
-    return map(lambda login: Command(login, [cmd]),
-               win.get_possible_logins(host, login))
+    return [Command(login, [cmd])
+            for login in win.get_possible_logins(host, login)]
 
 
 class CheckIsAccessible(ExecuteRemoteCommands):

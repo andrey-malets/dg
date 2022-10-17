@@ -1,6 +1,7 @@
 import json
-import urllib
-import urllib2
+import urllib.error
+import urllib.parse
+import urllib.request
 
 
 class AmtredirdError(Exception):
@@ -13,7 +14,10 @@ class AmtredirdError(Exception):
 
 
 def _do(base_url, cmd, data=None):
-    reply = urllib2.urlopen("{}/{}".format(base_url, cmd), data)
+    reply = urllib.request.urlopen(
+        f'{base_url}/{cmd}',
+        data.encode() if data is not None else None
+    )
     result = json.load(reply)
     reply.close()
     if 'error' in result:
@@ -22,7 +26,7 @@ def _do(base_url, cmd, data=None):
 
 
 def _list(clients):
-    return urllib.urlencode([(client, client) for client in clients])
+    return urllib.parse.urlencode([(client, client) for client in clients])
 
 
 def _post(base_url, cmd, clients):

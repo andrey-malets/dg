@@ -1,4 +1,4 @@
-import HTMLParser
+import html.parser
 import time
 import re
 import requests
@@ -6,7 +6,7 @@ import requests
 from common import config, stage
 
 
-class TParser(HTMLParser.HTMLParser):
+class TParser(html.parser.HTMLParser):
 
     def handle_starttag(self, tag, attrs):
         attrs_map = dict(attrs)
@@ -34,7 +34,7 @@ class StdMStage(config.WithAMTCredentials, stage.ParallelStage):
         return self.make_request(requests.get, host, url)
 
     def post(self, host, url, **params):
-        return self.make_request(requests.post, host, url, validate=False,
+        return self.make_request(requests.post, host, url, validate=True,
                                  data=params)
 
     def boot_control(self, host, **params):

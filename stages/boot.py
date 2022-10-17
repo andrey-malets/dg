@@ -9,10 +9,10 @@ def BootsToWindowsByDefault(host):
 class ConfigureBoot(config.WithConfigURL, stage.SimpleStage):
     BOOT_PROP = 'boot'
 
-    COW        = 'cow'
+    COW = 'cow'
     COW_MEMORY = 'cow-m'
-    WINDOWS    = 'grub.windows7'
-    DEFAULT    = ''
+    WINDOWS = 'grub.windows7'
+    DEFAULT = ''
 
     def set(self, host, value):
         cfg.set(self.config_url, host.name, [(ConfigureBoot.BOOT_PROP, value)])

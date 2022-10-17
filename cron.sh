@@ -63,7 +63,7 @@ config=$1
 . "$config"
 
 cmdline=("$(choose_locker "${LOCK[@]}")" "$config" "${LOCK[@]}"
-         python "$BASE/main.py" -m "$METHOD" "${ARGS[@]}")
+         python3 "$BASE/main.py" -m "$METHOD" "${ARGS[@]}")
 
 if ! [[ -z "$LOCAL_ADDRESS" ]]; then cmdline+=("-l" "$LOCAL_ADDRESS"); fi
 if ! [[ -z "$AMTPASSWD" ]]; then cmdline+=("-p" "$AMTPASSWD"); fi

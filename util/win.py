@@ -1,6 +1,6 @@
 def get_hostname(host):
-    return ('{}-win'.format(host.sname)).upper()
+    return f'{host.sname}-win'.upper()
 
 
 def get_possible_logins(host, login):
-    return ['{}+{}'.format(get_hostname(host), login), login]
+    return ['f{get_hostname(host)}+{login}', login]

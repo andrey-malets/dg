@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import argparse
 import datetime
@@ -158,10 +158,9 @@ def start_sysprep(client, sysprep_xml):
 
 def collect_installed_software(client, output):
     client.ssh('wmic', '/output:soft.txt', 'product', 'get', 'name')
-    raw_apps = map(
-        lambda line: line.strip(),
-        client.ssh('cat', 'soft.txt').decode('utf-16le').splitlines())
-    apps = sorted(filter(lambda line: len(line) > 0, raw_apps[1:]))
+    soft_txt = client.ssh('cat', 'soft.txt').decode('utf-16le')
+    raw_apps = list(line.strip() for line in soft_txt.splitlines())
+    apps = sorted(app for app in raw_apps[1:] if app)
     with open(output, 'w') as output_file:
         for app in apps:
             output_file.write('{}\n'.format(app.encode('utf-8')))
@@ -192,7 +191,7 @@ def main(raw_args):
         help='Sysprep unattended file location', required=True)
     parser.add_argument(
         '-ss', metavar='SCRIPT', default=[], action='append',
-        help='setup scripts to copy to Windows\Setup\Scripts')
+        help=r'setup scripts to copy to Windows\Setup\Scripts')
     parser.add_argument(
         '-l', metavar='PKGS', help='Filename for installed software list',
         required=True)
@@ -263,6 +262,7 @@ def main(raw_args):
             subprocess.check_call(['xl', 'create', args.CONFIG])
     finally:
         os.remove(args.SNAP_CONFIG)
+
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv[1:]))

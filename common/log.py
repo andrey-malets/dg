@@ -47,12 +47,11 @@ def send_report(args, state, log_file, start, finish):
     msg = MIMEMultipart()
 
     dest = ', '.join(sorted(state.groups) + sorted(state.hosts))
-    subject = 'Deployment of "{}" with "{}" method finished'.format(
-        dest, args.m)
+    subject = f'Deployment of "{dest}" with "{args.m}" method finished'
     text = 'Command line: {}.\n'.format(' '.join(sys.argv))
     text += '\nStart: {}.\nFinish: {}.\n'.format(
         start.strftime('%c'), finish.strftime('%c'))
-    if len(state.active_hosts) == 0:
+    if not state.active_hosts:
         subject += ' (ALL failed)'
     elif state.all_failed_hosts:
         subject += ' ({} failed)'.format(

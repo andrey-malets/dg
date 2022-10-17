@@ -38,7 +38,8 @@ class SimpleStage(Stage):
         pass
 
 
-def _run_forked((stage, host)):
+def _run_forked(args):
+    stage, host = args
     try:
         stage.run_single(host)
         return stage.failed, stage.failure_reason
@@ -71,7 +72,7 @@ class ParallelStage(Stage):
                 if failed:
                     assert reason
                     host.fail(self, reason)
-        except:
+        except BaseException:
             pool.terminate()
             raise
         finally:

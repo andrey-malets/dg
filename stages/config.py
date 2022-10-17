@@ -11,12 +11,12 @@ class RunCommands(stage.ParallelStage):
         return []
 
     def run_single(self, host):
-        rvs = [self.run_scp(host, self.ssh_login_linux, src, dst)
+        rvs = [self.run_scp(host, self.ssh_login_linux, src, dst)[0]
                for src, dst in self.get_files_to_copy(host)]
-        rvs += [self.run_ssh(host, cmd, login=self.ssh_login_linux)
+        rvs += [self.run_ssh(host, cmd, login=self.ssh_login_linux)[0]
                 for cmd in self.get_commands(host)]
 
-        if any(map(lambda (rv, _): rv != 0, rvs)):
+        if any(rvs):
             self.fail('failed to {}'.format(self))
 
 
@@ -24,7 +24,7 @@ class StoreCOWConfig(config.WithSSHCredentials, RunCommands):
     'store Puppet SSL stuff into COW config partition'
 
     def get_commands(self, host):
-        return map(lambda cmd: ['/root/cow/conf.sh'] + cmd, [
+        return list(['/root/cow/conf.sh'] + cmd for cmd in [
             ['mkdir', '-p', '{}/puppet/certs', '{}/puppet/private_keys'],
             ['cp', '-a', '/var/lib/puppet/ssl/certs/ca.pem',
              '{}/puppet/certs'],
@@ -70,8 +70,8 @@ class CustomizeWindowsSetup(
             ['mount', self.get_win7_partition(), mountpoint],
             ['cp /etc/ssh/ssh_host_*_key{{,.pub}} {}{}'.format(
                 mountpoint, prefix)],
-            ['python', '/tmp/customize.py'] + args + [sysprep_xml,
-                                                      sysprep_xml],
+            ['python3', '/tmp/customize.py'] + args + [sysprep_xml,
+                                                       sysprep_xml],
         ]
         hardware = host.props.get('hardware')
         if hardware:
@@ -96,7 +96,7 @@ class CustomizeWindowsSetup(
                 mountpoint)])
             cmds.append(['rm', '-rf', '{}/Users/UpdatusUser*'.format(
                 mountpoint)])
-            cmds.append(['python', '/tmp/filter_reg.py', '-q',
+            cmds.append(['python3', '/tmp/filter_reg.py', '-q',
                          '-f', '".+-500$"',
                          '{}/Users/profiles.reg'.format(mountpoint),
                          '{}/Users/profiles.reg'.format(mountpoint)])

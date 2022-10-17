@@ -19,8 +19,8 @@ class ChangeRedirection(config.WithAMTRedirdURL, stage.Stage):
         for host in state.active_hosts:
             assert host.amt_host
             amt_to_host[host.amt_host] = host
-        results = self.command(amt_to_host.keys())
-        for amt_host, (result, args) in results.iteritems():
+        results = self.command(list(amt_to_host.keys()))
+        for amt_host, (result, args) in results.items():
             if result != 0:
                 amt_to_host[amt_host].fail(self,
                                            'failed to change redirection')
@@ -37,8 +37,8 @@ class EnableRedirection(ChangeRedirection):
         for host in state.failed_hosts:
             assert host.amt_host
             amt_to_host[host.amt_host] = host
-        results = amtredird.stop(self.amtredird_url, amt_to_host.keys())
-        for amt_host, (result, args) in results.iteritems():
+        results = amtredird.stop(self.amtredird_url, list(amt_to_host.keys()))
+        for amt_host, (result, args) in results.items():
             if result != 0:
                 state.log.warning('failed to stop redirection for {}'.format(
                     amt_to_host[amt_host]))

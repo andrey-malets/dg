@@ -1,18 +1,19 @@
 import argparse
 import sys
 
-import log, stage, state
+from . import log
+from . import stage
+from . import state
 from util import amt_creds, proc
 
 
 def execute_with(raw_args, methods):
     method_cls, stages = Option.choose_method_and_stages(methods, raw_args)
 
-    if stages == []:
-        print >> sys.stderr, 'Stages of "{}" method:'.format(
-            method_cls.name)
+    if not stages:
+        print(f'Stages of "{method_cls.name}" method:', file=sys.stderr)
         for index, stage_ in enumerate(method_cls.stages):
-            print >> sys.stderr, '{:-3d}: {}'.format(index, stage_)
+            print('{:-3d}: {}'.format(index, stage_), file=sys.stderr)
         return 0
 
     method = method_cls(stages)

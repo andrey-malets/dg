@@ -31,7 +31,7 @@ usage() {
 new() {
   local base_config=$1 snapshot_config=$2
   silent locked "$base_config" make -C "$BASE/mp"
-  silent locked "$base_config" python "$BASE/prepare.py" \
+  silent locked "$base_config" python3 "$BASE/prepare.py" \
     -d 0 -S "$BASE/sysprep.xml" \
     -ss "$BASE/SetupComplete.cmd" -ss "$BASE/mp/set-mountpoint.exe" \
     -ss "$BASE/export.cmd" -ss "$BASE/hidden.vbs" \

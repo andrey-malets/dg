@@ -16,7 +16,7 @@ class SSHClient(object):
         cmdline = ['ssh', '-o', 'ConnectTimeout=3',
                    '-l', self.login, self.host] + cmd
         logging.info('running {}'.format(cmdline))
-        proc = psutil.Popen(cmdline, stdout=subprocess.PIPE)
+        proc = psutil.Popen(cmdline, stdout=subprocess.PIPE, text=True)
         try:
             proc.wait(timeout.total_seconds() if timeout else None)
         except psutil.TimeoutExpired:

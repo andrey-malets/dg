@@ -1,4 +1,3 @@
-import os
 import subprocess
 
 from common import config, stage
@@ -16,10 +15,10 @@ class EnsureNetworkSpeed(config.WithLocalAddress,
         self.server = None
 
     def setup(self):
-        self.output = open(os.devnull, 'w')
-        self.server = subprocess.Popen(['iperf', '-s'],
-                                       stdout=self.output,
-                                       stderr=subprocess.STDOUT)
+        self.server = subprocess.Popen(
+            ['iperf', '-s'], stdout=subprocess.DEVNULL,
+            stderr=subprocess.STDOUT
+        )
 
     def run_single(self, host):
         rv, output = self.run_ssh(
@@ -51,6 +50,5 @@ class EnsureNetworkSpeed(config.WithLocalAddress,
                         host.name, speed))
 
     def teardown(self):
-        self.output.close()
         self.server.terminate()
         self.server = None

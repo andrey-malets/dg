@@ -50,13 +50,13 @@ class RegFile(object):
         return RegFile(version, keys)
 
     def dump(self, output):
-        print >> output, self.version
-        print >> output
+        print(self.version, file=output)
+        print(file=output)
         for key, content in self.keys:
-            print >> output, '[{}]'.format(key)
+            print(f'[{key}]', file=output)
             for line in content:
-                print >> output, line
-            print >> output
+                print(line, file=output)
+            print(file=output)
 
 
 def filter_keys(reg_file, res):
@@ -89,6 +89,7 @@ def main():
 
     with open(args.DEST, 'w') as output:
         filter_keys(reg_file, args.f).dump(output)
+
 
 if __name__ == '__main__':
     main()

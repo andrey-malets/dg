@@ -25,8 +25,9 @@ class AMTStage(config.WithAMTCredentials, stage.SimpleStage):
         if special:
             cmdline.append(special)
         return subprocess.check_output(
-            cmdline,
-            env={'AMT_USER': user, 'AMT_PASSWORD': passwd})
+            cmdline, env={'AMT_USER': user, 'AMT_PASSWORD': passwd},
+            text=True
+        )
 
 
 class WakeupAMTHosts(AMTStage):

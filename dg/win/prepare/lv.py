@@ -8,8 +8,8 @@ from dg.win.prepare import util
 
 
 def lv_is_free(device):
-    output = subprocess.check_output(
-        ['lvs', '--noheadings', '-o', 'lv_attr', device]).strip()
+    cmd = ['lvs', '--noheadings', '-o', 'lv_attr', device]
+    output = subprocess.check_output(cmd, text=True).strip()
     open_flag = output[5]
     if open_flag == '-':
         return True

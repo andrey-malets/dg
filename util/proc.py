@@ -2,9 +2,10 @@ import subprocess
 
 
 def run_process(args, log):
-    log.info('running {}'.format(args))
+    log.info(f'running {args}')
     proc = subprocess.Popen(
-        args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+    )
     stdout, stderr = proc.communicate()
 
     if len(stderr) > 0:

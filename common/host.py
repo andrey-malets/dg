@@ -13,8 +13,9 @@ class Host(object):
         return self.name
 
     def fail(self, stage, reason):
-        self.state.log.error('host {} failed, stage: {}, reason: {}'.format(
-            self, stage, reason))
+        self.state.log.error(
+            f'host {self} failed, stage: {stage}, reason: {reason}'
+        )
         self.failure = (stage, reason)
         self.state.active_hosts.remove(self)
         self.state.failed_hosts.add(self)

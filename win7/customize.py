@@ -185,7 +185,7 @@ def main(raw_args):
                 set_auto_join(tree, args.j, args.u, pwdfile.read().strip())
         if args.P:
             set_profiles_directory(tree, args.P)
-        for user, pwd in map(lambda spec: spec.split(':', 1), args.a):
+        for user, pwd in [spec.split(':', 1) for spec in args.a]:
             add_local_admin(tree, user, pwd)
         if args.A:
             add_auto_login(tree, *args.A.split(':', 1))

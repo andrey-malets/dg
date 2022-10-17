@@ -14,7 +14,7 @@ def exposed_partitions(path, log):
         if os.path.islink(path) else path
     )
 
-    list_output = subprocess.check_output(['kpartx', '-l', path])
+    list_output = subprocess.check_output(['kpartx', '-l', path], text=True)
     partitions = [
         '/dev/mapper/{}'.format(line.split()[0])
         for line in list_output.splitlines()
