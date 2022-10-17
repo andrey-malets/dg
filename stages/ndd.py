@@ -52,7 +52,7 @@ class RunNDD(config.WithLocalAddress, config.WithNDDArgs, config.WithConfigURL,
             with self.prepared_input(spec.input_, spec.iargs, state.log) \
                     as input_:
                 cmdline = [
-                    '/usr/local/bin/ndd.py', '-p', self.ndd_port,
+                    '/usr/local/bin/ndd.py', '-v', '-p', self.ndd_port,
                     '-i', input_, '-o', spec.output
                 ]
 
