@@ -3,4 +3,4 @@ def get_hostname(host):
 
 
 def get_possible_logins(host, login):
-    return ['f{get_hostname(host)}+{login}', login]
+    return [f'{get_hostname(host)}+{login}', login]
