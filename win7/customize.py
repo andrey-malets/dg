@@ -136,7 +136,7 @@ def set_profiles_directory(tree, directory):
 def xml_tree(filename, output):
     tree = etree.parse(filename)
     yield tree.getroot()
-    with open(output, 'w') as out:
+    with open(output, 'wb') as out:
         out.write(etree.tostring(tree, xml_declaration=True, encoding='utf-8',
                                  pretty_print=True))
 
