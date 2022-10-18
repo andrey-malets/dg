@@ -10,7 +10,7 @@ from util import amt_creds, proc
 def execute_with(raw_args, methods):
     method_cls, stages = Option.choose_method_and_stages(methods, raw_args)
 
-    if not stages:
+    if stages == []:
         print(f'Stages of "{method_cls.name}" method:', file=sys.stderr)
         for index, stage_ in enumerate(method_cls.stages):
             print('{:-3d}: {}'.format(index, stage_), file=sys.stderr)
