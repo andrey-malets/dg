@@ -9,7 +9,7 @@ def BootsToWindowsByDefault(host):
 class ConfigureBoot(config.WithConfigURL, stage.SimpleStage):
     BOOT_PROP = 'boot'
 
-    COW = 'cow'
+    LOCAL_COW = 'grub.cow'
     COW_MEMORY = 'cow-m'
     WINDOWS = 'grub.windows7'
     DEFAULT = ''
@@ -39,7 +39,7 @@ class SetBootIntoLocalLinux(ConfigureBoot):
     'enable boot to local Linux'
 
     def run_single(self, host):
-        self.set(host, ConfigureBoot.COW)
+        self.set(host, ConfigureBoot.LOCAL_COW)
 
 
 class ResetBoot(ConfigureBoot):
