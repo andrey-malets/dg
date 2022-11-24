@@ -47,6 +47,10 @@ class RunNDD(config.WithLocalAddress, config.WithNDDArgs, config.WithConfigURL,
         else:
             yield input_
 
+    @classmethod
+    def hostkey(cls, host):
+        return (host.props.get('switch'), host.name)
+
     def run(self, state):
         for spec in self.ndds:
             with self.prepared_input(spec.input_, spec.iargs, state.log) \
@@ -69,8 +73,7 @@ class RunNDD(config.WithLocalAddress, config.WithNDDArgs, config.WithConfigURL,
                 if spec.args:
                     cmdline.extend(['-{}'.format(spec.args)])
 
-                for host in sorted(state.active_hosts,
-                                   key=lambda host: host.props.get('switch')):
+                for host in sorted(state.active_hosts, key=self.hostkey):
                     if remote_source and host.name == remote_source:
                         continue
                     cmdline.extend(
@@ -79,5 +82,5 @@ class RunNDD(config.WithLocalAddress, config.WithNDDArgs, config.WithConfigURL,
 
                 rv, _ = proc.run_process(cmdline, state.log)
                 if rv != 0:
-                    for host in list(state.active_hosts):
+                    for host in sorted(state.active_hosts):
                         host.fail(self, 'failed to run ndd.py')

@@ -20,7 +20,7 @@ class ExcludeBannedHosts(config.WithBannedHosts, stage.Stage):
     'exclude banned hosts from deployment'
 
     def run(self, state):
-        for host_ in list(state.active_hosts):
+        for host_ in sorted(state.active_hosts):
             if any(name in self.banned_hosts
                    for name in (host_.name, host_.sname)):
                 host_.fail(self, 'explicitly excluded from deployment')

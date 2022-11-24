@@ -18,14 +18,14 @@ class Stage(object):
 
 class SimpleStage(Stage):
     def run(self, state):
-        for host in list(state.active_hosts):
+        for host in sorted(state.active_hosts):
             try:
                 self.run_single(host)
             except Exception as e:
                 host.fail(self, e)
 
     def rollback(self, state):
-        for host in list(state.failed_hosts):
+        for host in sorted(state.failed_hosts):
             try:
                 self.rollback_single(host)
             except Exception as e:
@@ -65,7 +65,7 @@ class ParallelStage(Stage):
             with self.prepared():
                 host_to_result = [
                     (host, pool.apply_async(_run_forked, [(self, host)]))
-                    for host in state.active_hosts
+                    for host in sorted(state.active_hosts)
                 ]
                 for host, result in host_to_result:
                     # Timeout is here to handle interruptions properly,

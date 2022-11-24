@@ -12,6 +12,9 @@ class Host(object):
     def __str__(self):
         return self.name
 
+    def __lt__(self, other):
+        return self.name.__lt__(other.name)
+
     def fail(self, stage, reason):
         self.state.log.error(
             f'host {self} failed, stage: {stage}, reason: {reason}'

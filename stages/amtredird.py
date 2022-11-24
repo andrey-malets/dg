@@ -7,7 +7,7 @@ class EnsureRedirectionPossible(config.WithAMTRedirdURL, stage.Stage):
 
     def run(self, state):
         possible_hosts = set(amtredird.list(self.amtredird_url))
-        for host in list(state.active_hosts):
+        for host in sorted(state.active_hosts):
             assert host.amt_host
             if host.amt_host not in possible_hosts:
                 host.fail(self, 'AMT host not configured in amtredird')
@@ -16,7 +16,7 @@ class EnsureRedirectionPossible(config.WithAMTRedirdURL, stage.Stage):
 class ChangeRedirection(config.WithAMTRedirdURL, stage.Stage):
     def run(self, state):
         amt_to_host = {}
-        for host in state.active_hosts:
+        for host in sorted(state.active_hosts):
             assert host.amt_host
             amt_to_host[host.amt_host] = host
         results = self.command(list(amt_to_host.keys()))

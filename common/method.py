@@ -25,7 +25,7 @@ class Method(object):
             except (KeyboardInterrupt, Exception) as e:
                 state.log.exception(e)
                 state.log.error('stage "{}" failed completely'.format(stage))
-                for host in set(state.active_hosts):
+                for host in sorted(state.active_hosts):
                     host.fail(stage, 'stage completely failed')
 
             if len(state.failed_hosts) > 0:
@@ -42,7 +42,7 @@ class Method(object):
                 state.all_failed_hosts.update(state.failed_hosts)
                 state.failed_hosts.clear()
 
-            if len(state.active_hosts) == 0:
+            if not state.active_hosts:
                 state.log.error('all the hosts failed, stopping now')
                 return False
 
