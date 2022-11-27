@@ -23,7 +23,7 @@ REBOOT_WIN = 'shutdown /r /t 0'
 
 CHECK_LINUX = '! test -f {}'.format(REBOOT_MARKER)
 CHECK_LINUX_MEM = 'grep -q cowtype=mem /proc/cmdline && ' + CHECK_LINUX
-REBOOT_LINUX = 'touch {} && shutdown -r'.format(REBOOT_MARKER)
+REBOOT_LINUX = 'touch {} && shutdown -r now'.format(REBOOT_MARKER)
 
 
 class ExecuteRemoteCommands(config.WithSSHCredentials, stage.ParallelStage):
@@ -90,7 +90,7 @@ class MaybeRebootLocalLinux(ExecuteRemoteCommands):
 
     def get_commands(self, host):
         return ([Command(self.ssh_login_linux, [REBOOT_LINUX])]
-                if boot.BootsToWindowsByDefault(host) else [])
+                if not boot.BootsToLocalLinuxByDefault(host) else [])
 
 
 class WaitUntilBootedIntoLocalWindows(ExecuteRemoteCommands):

@@ -2,10 +2,6 @@ from common import config, stage
 from clients import config as cfg
 
 
-def BootsToWindowsByDefault(host):
-    return host.props.get('boot') == ConfigureBoot.WINDOWS
-
-
 class ConfigureBoot(config.WithConfigURL, stage.SimpleStage):
     BOOT_PROP = 'boot'
 
@@ -19,6 +15,14 @@ class ConfigureBoot(config.WithConfigURL, stage.SimpleStage):
 
     def rollback_single(self, host):
         self.set(host, ConfigureBoot.DEFAULT)
+
+
+def BootsToByDefault(host):
+    return host.props.get('boot') == ConfigureBoot.WINDOWS
+
+
+def BootsToLocalLinuxByDefault(host):
+    return host.props.get('boot') == ConfigureBoot.LOCAL_COW
 
 
 class SetBootIntoCOWMemory(ConfigureBoot):
