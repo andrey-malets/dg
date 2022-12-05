@@ -1,5 +1,6 @@
 import argparse
 import contextlib
+import json
 import sys
 
 from . import log
@@ -8,8 +9,31 @@ from . import state
 from util import amt_creds, proc, lock
 
 
+def config(value):
+    with open(value) as config_input:
+        return json.load(config_input)
+
+
+def get_args(raw_args):
+    config_parser = argparse.ArgumentParser(raw_args[0], add_help=False)
+    config_parser.add_argument(
+        '--config', type=config,
+        help='Path to config file with all the options in JSON'
+    )
+    known_args, unknown_args = config_parser.parse_known_args(raw_args[1:])
+    if known_args.config is not None:
+        if unknown_args:
+            config_parser.error(
+                '--config is not compatible with other options'
+            )
+        return known_args.config
+    else:
+        return raw_args[1:]
+
+
 def execute_with(raw_args, methods):
-    method_cls, stages = Option.choose_method_and_stages(methods, raw_args)
+    args = get_args(raw_args)
+    method_cls, stages = Option.choose_method_and_stages(methods, args)
 
     if stages == []:
         print(f'Stages of "{method_cls.name}" method:', file=sys.stderr)
@@ -18,8 +42,8 @@ def execute_with(raw_args, methods):
         return 0
 
     method = method_cls(stages)
-    parser = Option.get_method_parser(method, raw_args)
-    method_args = parser.parse_args(raw_args)
+    parser = Option.get_method_parser(method, args)
+    method_args = parser.parse_args(args)
 
     method.parse(method_args)
 
