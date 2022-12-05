@@ -1,10 +1,11 @@
 import argparse
+import contextlib
 import sys
 
 from . import log
 from . import stage
 from . import state
-from util import amt_creds, proc
+from util import amt_creds, proc, lock
 
 
 def execute_with(raw_args, methods):
@@ -21,9 +22,11 @@ def execute_with(raw_args, methods):
     method_args = parser.parse_args(raw_args)
 
     method.parse(method_args)
-    the_state = state.State(parser, method_args)
 
-    with log.capturing(method_args, the_state):
+    the_state = state.State(parser, method_args)
+    with contextlib.ExitStack() as stack:
+        stack.enter_context(log.capturing(method_args, the_state))
+        stack.enter_context(lock.locked(the_state, method_args.lock))
         return 0 if method.run(the_state) else 1
 
 
@@ -42,6 +45,8 @@ class Option(object):
     def add_common_params(parser, method_classes):
         state.State.add_params(parser)
         log.add_params(parser)
+        parser.add_argument('--lock', help='Lock specified file exclusively '
+                                           'while running deploy')
         parser.add_argument(
             '-m', choices=[method.name for method in method_classes],
             help='Deploy method', required=True)
