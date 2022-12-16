@@ -19,18 +19,20 @@ class ChangeRedirection(config.WithAMTRedirdURL, stage.Stage):
         for host in sorted(state.active_hosts):
             assert host.amt_host
             amt_to_host[host.amt_host] = host
-        results = self.command(list(amt_to_host.keys()))
-        for amt_host, (result, args) in results.items():
-            if result != 0:
-                amt_to_host[amt_host].fail(self,
-                                           'failed to change redirection')
+        hosts = list(amt_to_host.keys())
+        for command in self.commands():
+            results = command(self.amtredird_url, hosts)
+            for amt_host, (result, args) in results.items():
+                if result != 0:
+                    amt_to_host[amt_host].fail(self,
+                                               'failed to change redirection')
 
 
 class EnableRedirection(ChangeRedirection):
     'enable IDE-R redirection via amtredird'
 
-    def command(self, hosts):
-        return amtredird.start(self.amtredird_url, hosts)
+    def commands(self):
+        return [amtredird.stop, amtredird.start]
 
     def rollback(self, state):
         amt_to_host = {}
@@ -47,5 +49,5 @@ class EnableRedirection(ChangeRedirection):
 class DisableRedirection(ChangeRedirection):
     'disable IDE-R redirection via amtredird'
 
-    def command(self, hosts):
-        return amtredird.stop(self.amtredird_url, hosts)
+    def commands(self):
+        return [amtredird.stop]
