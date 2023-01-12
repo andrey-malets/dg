@@ -9,7 +9,7 @@ class EnsureNetworkSpeed(config.WithLocalAddress,
                          stage.ParallelStage):
     'ensure sufficient throughput of network interface'
 
-    def __init__(self, poolsize=3, minimum=150, time=5):
+    def __init__(self, poolsize=10, minimum=500, time=5):
         super().__init__(poolsize)
         self.minimum = minimum
         self.time = time
