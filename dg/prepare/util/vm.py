@@ -2,6 +2,9 @@ import abc
 import contextlib
 import logging
 import os
+import stat
+import sys
+import tempfile
 import xml.etree.ElementTree as ET
 
 from dg.prepare.util import linux
@@ -10,76 +13,161 @@ from dg.prepare.util import processes
 from dg.prepare.util import transactions
 from dg.prepare.util import volume_cache
 from dg.prepare.util import wait
+from dg.prepare.util import windows
+
+
+class VirtualMachine(abc.ABC):
+
+    def __init__(self, name, host):
+        self.name = name
+        self.host = host
+
+    @abc.abstractmethod
+    def is_accessible(self):
+        pass
+
+    @abc.abstractmethod
+    def shutdown(self):
+        pass
+
+
+class LinuxVM(VirtualMachine):
+
+    def is_accessible(self):
+        return linux.is_accessible(self.host)
+
+    def shutdown(self):
+        return linux.shutdown(self.host)
+
+
+class WindowsVM(VirtualMachine):
+
+    def is_accessible(self):
+        return windows.is_accessible(self.host)
+
+    def shutdown(self):
+        return windows.shutdown(self.host)
 
 
 class VirtualMachineManager(abc.ABC):
 
-    def is_vm_running(self, name):
+    def is_vm_running(self, vm):
         pass
 
-    def start(self, name):
+    def start(self, vm):
         pass
 
-    def reset(self, name):
+    def destroy(self, vm):
         pass
 
-    def get_disks(self, name):
+    def reset(self, vm):
         pass
+
+    def get_disk(self, vm):
+        pass
+
+    def set_disk(self, vm, old_disk, disk):
+        pass
+
+
+DISK_NODE = './devices/disk/source'
+
+
+@contextlib.contextmanager
+def set_disk_script(old_disk, disk):
+    script_content = f"""#!{sys.executable}
+
+import sys
+import xml.etree.ElementTree as ET
+
+tree = ET.parse(sys.argv[1])
+nodes = tree.findall('{DISK_NODE}')
+assert len(nodes) == 1, (
+    f'expected exactly one node with selector "{DISK_NODE}", got {{nodes}}'
+)
+assert nodes[0].get('dev') == '{old_disk}', (
+    f"expected disk dev to be {old_disk}, got {{nodes[0].get('dev')}}"
+)
+nodes[0].set('dev', '{disk}')
+tree.write(sys.argv[1])
+"""
+    with tempfile.NamedTemporaryFile(
+            mode='w', prefix='set_disk_', suffix='.py', delete=False
+    ) as sds:
+        sds.write(script_content)
+        sds.close()
+        os.chmod(sds.name, stat.S_IRUSR | stat.S_IXUSR)
+        try:
+            yield sds.name
+        finally:
+            os.unlink(sds.name)
 
 
 class Virsh(VirtualMachineManager):
 
-    def is_vm_running(self, name):
-        logging.info('Checking if %s is running', name)
+    def is_vm_running(self, vm):
+        logging.info('Checking if %s is running', vm.name)
         cmdline = ['virsh', 'list', '--state-running', '--name']
         list_output = processes.log_and_output(cmdline)
         domains = set(d.strip() for d in list_output.splitlines() if d)
         logging.info('Running domains: %s', domains)
 
-        return name in domains
+        return vm.name in domains
 
-    def start(self, name):
-        processes.log_and_call(['virsh', 'start', name])
+    def start(self, vm):
+        processes.log_and_call(['virsh', 'start', vm.name])
 
-    def reset(self, name):
-        logging.warning('Resetting %s', name)
-        processes.log_and_call(['virsh', 'reset', name])
+    def destroy(self, vm):
+        logging.warning('Destroying %s', vm.name)
+        processes.log_and_call(['virsh', 'destroy', vm.name])
+        wait.wait_for(lambda: not self.is_vm_running(vm), timeout=30, step=3)
 
-    def get_disks(self, name):
-        xml = processes.log_and_output(['virsh', 'dumpxml', name])
+    def reset(self, vm):
+        logging.warning('Resetting %s', vm.name)
+        processes.log_and_call(['virsh', 'reset', vm.name])
+
+    def get_disks(self, vm):
+        xml = processes.log_and_output(['virsh', 'dumpxml', vm.name])
         root = ET.fromstring(xml)
-        for disk in root.findall('./devices/disk/source'):
+        for disk in root.findall(DISK_NODE):
             yield disk.get('dev')
+
+    def get_disk(self, vm):
+        disks = list(self.get_disks(vm))
+        if len(disks) != 1:
+            raise RuntimeError('Need exactly one disk for vm {vm.name}, '
+                               'got {disks}')
+        return disks[0]
+
+    def set_disk(self, vm, old_disk, disk):
+        with set_disk_script(old_disk, disk) as script:
+            env = os.environ.copy()
+            env['EDITOR'] = script
+            processes.log_and_call(['virsh', 'edit', vm.name], env=env)
+        return disk
 
 
 @contextlib.contextmanager
-def vm_shut_down(vmm, name, host):
-    linux.shutdown(host)
-    wait.wait_for(lambda: not vmm.is_vm_running(name), timeout=180, step=3)
+def vm_shut_down(vmm, vm):
+    vm.shutdown()
+    wait.wait_for(lambda: not vmm.is_vm_running(vm), timeout=180, step=3)
     try:
         yield
     finally:
-        vmm.start(name)
+        vmm.start(vm)
         try:
-            wait.wait_for(lambda: linux.is_accessible(host), 300, 5)
+            wait.wait_for(lambda: vm.is_accessible(), 300, 5)
         except wait.Timeout:
             logging.exception('Timed out waiting for %s to become accessbile '
-                              'with ssh', host)
+                              'with ssh', vm.host)
             raise
 
 
-def get_disk(vmm, vm):
-    disks = list(vmm.get_disks(vm))
-    if len(disks) != 1:
-        raise RuntimeError('Need exactly one disk for vm, got {disks}')
-    return disks[0]
-
-
-def create_vm_disk_snapshot(vmm, vm, host, timestamp, size, non_volatile_pv):
+def create_vm_disk_snapshot(vmm, vm, timestamp, size, non_volatile_pv):
     origin = None
     name = None
-    with vm_shut_down(vmm, vm, host):
-        lv = get_disk(vmm, vm)
+    with vm_shut_down(vmm, vm):
+        lv = vmm.get_disk(vm)
         wait.wait_for(lambda: not lvm.is_lv_open(lv), timeout=30, step=1)
         origin = lv
         name = lvm.lvm_snapshot_name(origin, timestamp)
@@ -89,14 +177,13 @@ def create_vm_disk_snapshot(vmm, vm, host, timestamp, size, non_volatile_pv):
 
 
 @contextlib.contextmanager
-def vm_disk_snapshot(vmm, ref_vm, ref_host, timestamp, size, cache_config):
+def vm_disk_snapshot(vmm, vm, timestamp, size, cache_config):
     nvpv = volume_cache.non_volatile_pv(cache_config)
     with contextlib.ExitStack() as stack:
         with transactions.transact(
             prepare=(
-                f'Creating disk snapshot of {ref_vm}',
-                lambda: create_vm_disk_snapshot(vmm, ref_vm, ref_host,
-                                                timestamp, size, nvpv)
+                f'Creating disk snapshot of {vm.name}',
+                lambda: create_vm_disk_snapshot(vmm, vm, timestamp, size, nvpv)
             ),
             final=(
                 'cleaning up disk snapshot',

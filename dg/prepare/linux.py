@@ -33,38 +33,37 @@ def get_hostname(session, host_re=re.compile(r'^.+\:(?P<hostname>.+)'
     return match.group('hostname')
 
 
-def booted_properly(host, timestamp):
-    if not linux_util.is_accessible(host):
+def booted_properly(vm, timestamp):
+    if not vm.is_accessible():
         return False
     try:
-        cmdline = ['ssh', host, 'cat', '/etc/timestamp']
+        cmdline = ['ssh', vm.host, 'cat', '/etc/timestamp']
         output = processes.log_and_output(cmdline).strip()
         if output != timestamp:
             logging.warning('Actual timestamp %s is not expected %s',
                             output, timestamp)
         return True
     except Exception:
-        logging.exception('Failed to get timestamp from %s', host)
+        logging.exception('Failed to get timestamp from %s', vm.host)
 
 
-def reboot_and_check_test_vm(vmm, test_vm, host, timestamp):
-    if linux_util.is_accessible(host):
-        linux_util.reboot(host)
+def reboot_and_check_test_vm(vmm, vm, timestamp):
+    if vm.is_accessible():
+        linux_util.reboot(vm.host)
     else:
-        logging.warning('%s is not accessble', host)
-        vmm.reset(test_vm)
+        logging.warning('%s is not accessble', vm.host)
+        vmm.reset(vm)
 
-    wait.wait_for(lambda: booted_properly(host, timestamp),
-                  timeout=180, step=10)
+    wait.wait_for(lambda: booted_properly(vm, timestamp), timeout=180, step=10)
 
 
-def get_snapshots(vmm, vm_name):
-    pattern = lvm.snapshot_glob(vm.get_disk(vmm, vm_name))
+def get_snapshots(vmm, vm):
+    pattern = lvm.snapshot_glob(vmm.get_disk(vm))
     return sorted(glob.glob(pattern))
 
 
-def reboot_inactive_clients(vmm, args):
-    snapshots = get_snapshots(vmm, args.ref_vm)
+def reboot_inactive_clients(vmm, ref_vm, test_vm):
+    snapshots = get_snapshots(vmm, ref_vm)
 
     for snapshot in snapshots:
         backstore_name = iscsi.get_iscsi_backstore_name(snapshot)
@@ -78,19 +77,20 @@ def reboot_inactive_clients(vmm, args):
                 continue
             logging.debug('Snapshot %s is used on %s in session %s',
                           snapshot, host, session)
-            if host != args.test_host:
+            if host != test_vm.host:
                 linux_util.try_reboot_if_idle(host)
 
 
 def add_snapshot(args):
     vmm = vm.Virsh()
-    cow.check_preconditions(vmm, args.ref_vm, args.ref_host)
+    ref_vm = vm.LinuxVM(args.ref_vm, args.ref_host)
+    test_vm = vm.LinuxVM(args.test_vm, args.test_host)
+    cow.check_preconditions(vmm, ref_vm)
 
     timestamp = cow.generate_timestamp()
     with contextlib.ExitStack() as snapshot_stack:
         snapshot_disk = snapshot_stack.enter_context(vm.vm_disk_snapshot(
-            vmm, args.ref_vm, args.ref_host, timestamp, args.snapshot_size,
-            args.cache_config
+            vmm, ref_vm, timestamp, args.snapshot_size, args.cache_config
         ))
         artifacts = snapshot_stack.enter_context(
             cow.snapshot_artifacts(args.output, snapshot_disk)
@@ -135,13 +135,11 @@ def add_snapshot(args):
             args.output, iscsi_target_name, kernel, initrd
         ))
 
-        snapshot_stack.enter_context(
-            vm.reset_back_on_failure(vmm, args.test_vm)
-        )
+        snapshot_stack.enter_context(vm.reset_back_on_failure(vmm, test_vm))
         snapshot_stack.enter_context(ipxe.published_ipxe_config(
             args.output, ipxe_config, testing=True
         ))
-        reboot_and_check_test_vm(vmm, args.test_vm, args.test_host, timestamp)
+        reboot_and_check_test_vm(vmm, test_vm, timestamp)
         ipxe_config = snapshot_stack.enter_context(
             ipxe.published_ipxe_config(args.output, ipxe_config)
         )
@@ -149,7 +147,7 @@ def add_snapshot(args):
 
     if args.push:
         logging.info('Pushing update to inactive clients with reboot')
-        reboot_inactive_clients(vmm, args)
+        reboot_inactive_clients(vmm, ref_vm, test_vm)
 
 
 def clean_snapshot(output, cache_config, name, force=False):
@@ -216,7 +214,8 @@ def clean_snapshot(output, cache_config, name, force=False):
 
 def clean_snapshots(args):
     vmm = vm.Virsh()
-    snapshots = get_snapshots(vmm, args.ref_vm)
+    ref_vm = vm.LinuxVM(args.ref_vm, None)
+    snapshots = get_snapshots(vmm, ref_vm)
     if not snapshots:
         return
 

@@ -21,3 +21,11 @@ def ssh(host, command, output=False, options=None, **kwargs):
         return log_and_output(cmdline, **kwargs)
     else:
         return log_and_call(cmdline, method=subprocess.call, **kwargs)
+
+
+def scp(host, src, dst, options=None, **kwargs):
+    cmdline = ['scp']
+    if options is not None:
+        cmdline.extend(options)
+    cmdline.extend([src, f'{host}:{dst}'])
+    return log_and_call(cmdline, method=subprocess.call, **kwargs)

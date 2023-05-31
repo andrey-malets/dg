@@ -5,7 +5,6 @@ import logging
 import os
 import shutil
 
-from dg.prepare.util import linux
 from dg.prepare.util import processes
 
 
@@ -21,13 +20,12 @@ class CowPartitionsConfig:
     place: str
 
 
-def check_preconditions(vmm, ref_vm, ref_host):
-    if not vmm.is_vm_running(ref_vm):
-        raise RuntimeError(f'Reference vm {ref_vm} is not running')
+def check_preconditions(vmm, vm):
+    if not vmm.is_vm_running(vm):
+        raise RuntimeError(f'Vm {vm.name} is not running')
 
-    if not linux.is_accessible(ref_host):
-        raise RuntimeError(f'Reference host {ref_host} is not accessible '
-                           'with ssh')
+    if not vm.is_accessible():
+        raise RuntimeError(f'Host {vm.host} is not accessible with ssh')
 
 
 def generate_timestamp():
