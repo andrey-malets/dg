@@ -114,13 +114,16 @@ def add_snapshot(args):
             r'start /w C:\Windows\system32\sysprep\sysprep.exe '
             f'/oobe /generalize /shutdown /unattend:{sysprep_xml}'
         )
-        snapshot_stack.enter_context(
-            windows.ssh_away(snapshot_vm.host, sysprep_cmd)
-        )
-        logging.info('Waiting for %s to shut down', snapshot_vm.host)
-        wait.wait_for(lambda: not vmm.is_vm_running(snapshot_vm),
-                      timeout=600, step=10)
-        if args.test:
+        with windows.ssh_away(snapshot_vm.host, sysprep_cmd):
+            logging.info('Waiting for %s to shut down', snapshot_vm.host)
+            wait.wait_for(lambda: not vmm.is_vm_running(snapshot_vm),
+                          timeout=600, step=10)
+
+        if args.link_snapshot:
+            logging.info('Linking snapshot %s to %s', new_disk,
+                         args.link_snapshot)
+            lvm.move_link(new_disk, args.link_snapshot)
+        elif args.test:
             logging.info('Starting sysprepped vm back for test')
             snapshot_stack.enter_context(started(vmm, snapshot_vm))
             logging.info('Waiting for %s to become accessible',
@@ -151,6 +154,7 @@ def parse_args(raw_args):
     add_parser.add_argument('-s', '--snapshot-size', default='5G')
     add_parser.add_argument('-c', '--copy', default=[], action='append',
                             type=Copy)
+    add_parser.add_argument('--link-snapshot')
     add_parser.add_argument('-t', '--test', action='store_true')
     add_parser.add_argument(
         '-sp', '--sysprep-xml',
@@ -169,7 +173,11 @@ def parse_args(raw_args):
     # clean_parser.add_argument('output')
     clean_parser.set_defaults(func=clean_snapshots)
 
-    return parser.parse_args(config.get_args(raw_args))
+    args = parser.parse_args(config.get_args(raw_args))
+    if args.test and args.link_snapshot:
+        parser.error('--test is incompatible with --link-snapshot')
+
+    return args
 
 
 def main(raw_args):
