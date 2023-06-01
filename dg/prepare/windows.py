@@ -2,8 +2,10 @@
 
 import argparse
 import contextlib
+import dataclasses
 import logging
 import os
+import subprocess
 import sys
 
 from dg.prepare.util import config
@@ -15,6 +17,18 @@ from dg.prepare.util import transactions
 from dg.prepare.util import vm
 from dg.prepare.util import wait
 from dg.prepare.util import windows
+
+
+SETUP_SCRIPTS_DIR = r'C:\Windows\Setup\Scripts'
+
+
+@dataclasses.dataclass
+class Copy:
+    src: str
+    dst: str
+
+    def __init__(self, spec):
+        self.src, self.dst = spec.split(':', 1)
 
 
 def create_vm_disk_snapshot(vmm, vm_, timestamp, size):
@@ -90,6 +104,12 @@ def add_snapshot(args):
         sysprep_xml = 'sysprep.xml'
         windows.scp(snapshot_vm.host, args.sysprep_xml, sysprep_xml)
 
+        windows.ssh(snapshot_vm.host, f'mkdir {SETUP_SCRIPTS_DIR}',
+                    method=subprocess.call)
+
+        for copy in args.copy:
+            windows.scp(snapshot_vm.host, copy.src, copy.dst)
+
         sysprep_cmd = (
             r'start /w C:\Windows\system32\sysprep\sysprep.exe '
             f'/oobe /generalize /shutdown /unattend:{sysprep_xml}'
@@ -100,6 +120,15 @@ def add_snapshot(args):
         logging.info('Waiting for %s to shut down', snapshot_vm.host)
         wait.wait_for(lambda: not vmm.is_vm_running(snapshot_vm),
                       timeout=600, step=10)
+        if args.test:
+            logging.info('Starting sysprepped vm back for test')
+            snapshot_stack.enter_context(started(vmm, snapshot_vm))
+            logging.info('Waiting for %s to become accessible',
+                         snapshot_vm.name)
+            wait.wait_for(lambda: snapshot_vm.is_accessible(), 900, 5)
+            snapshot_vm.shutdown()
+            wait.wait_for(lambda: not vmm.is_vm_running(snapshot_vm),
+                          timeout=60, step=3)
 
 
 def clean_snapshots(args):
@@ -120,6 +149,9 @@ def parse_args(raw_args):
 
     add_parser = subparsers.add_parser('add', help='Add new snapshot')
     add_parser.add_argument('-s', '--snapshot-size', default='5G')
+    add_parser.add_argument('-c', '--copy', default=[], action='append',
+                            type=Copy)
+    add_parser.add_argument('-t', '--test', action='store_true')
     add_parser.add_argument(
         '-sp', '--sysprep-xml',
         default=os.path.join(os.path.dirname(__file__), 'sysprep.xml')

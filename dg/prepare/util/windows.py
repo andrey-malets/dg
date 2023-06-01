@@ -16,8 +16,8 @@ def is_accessible(host):
     ) == 0
 
 
-def ssh(host, command):
-    processes.ssh(host, command, options=SSH_OPTIONS)
+def ssh(host, command, **kwargs):
+    return processes.ssh(host, command, options=SSH_OPTIONS, **kwargs)
 
 
 @contextlib.contextmanager
@@ -42,9 +42,9 @@ def ssh_away(host, command):
 
 def shutdown(host):
     logging.info('Shutting down %s', host)
-    ssh(host, 'shutdown /s /t 0')
+    return ssh(host, 'shutdown /s /t 0')
 
 
 def scp(host, src, dst):
     logging.info('Copying %s to %s on %s', src, dst, host)
-    processes.scp(host, src, dst, options=SCP_OPTIONS)
+    return processes.scp(host, src, dst, options=SCP_OPTIONS)
