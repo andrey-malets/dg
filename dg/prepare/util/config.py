@@ -1,5 +1,6 @@
 import argparse
 import json
+import logging
 
 
 def prepare_config_of(type_):
@@ -11,7 +12,11 @@ def prepare_config_of(type_):
 
 def parse_prepare_config(value):
     with open(value) as config_input:
-        return json.load(config_input)
+        try:
+            return json.load(config_input)
+        except Exception:
+            logging.exception('Failed to parse config %s', value)
+            raise
 
 
 def get_args(raw_args):

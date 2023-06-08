@@ -3,6 +3,7 @@
 import argparse
 import contextlib
 import dataclasses
+import glob
 import logging
 import os
 import subprocess
@@ -134,10 +135,31 @@ def add_snapshot(args):
                           timeout=60, step=3)
 
 
+def snapshot_glob(origin):
+    return f'{origin}-at-*'
+
+
+def get_snapshots(vmm, vm):
+    pattern = snapshot_glob(vmm.get_disk(vm))
+    return sorted(glob.glob(pattern))
+
+
 def clean_snapshots(args):
     vmm = vm.Virsh()
-    print(vmm)
-    # TODO:
+    ref_vm = vm.WindowsVM(args.ref_vm, None)
+    snapshots = get_snapshots(vmm, ref_vm)
+    if not snapshots:
+        return
+
+    old, latest = snapshots[:-1], snapshots[-1]
+
+    for snapshot in old:
+        logging.info('Removing snapshot %s', snapshot)
+        lvm.remove_lv(snapshot)
+
+    if args.force_latest:
+        logging.warning('Removing latest snapshot %s', latest)
+        lvm.remove_lv(latest)
 
 
 def parse_args(raw_args):
@@ -166,15 +188,13 @@ def parse_args(raw_args):
     add_parser.set_defaults(func=add_snapshot)
 
     clean_parser = subparsers.add_parser('clean', help='Cleanup old snapshots')
-    clean_parser.add_argument('--force-old', action='store_true')
     clean_parser.add_argument('--force-latest', action='store_true')
 
     clean_parser.add_argument('ref_vm')
-    # clean_parser.add_argument('output')
     clean_parser.set_defaults(func=clean_snapshots)
 
     args = parser.parse_args(config.get_args(raw_args))
-    if args.test and args.link_snapshot:
+    if args.func == add_snapshot and args.test and args.link_snapshot:
         parser.error('--test is incompatible with --link-snapshot')
 
     return args
