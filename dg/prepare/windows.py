@@ -45,11 +45,15 @@ def create_vm_disk_snapshot(vmm, vm_, timestamp, size):
 
 
 @contextlib.contextmanager
-def disk_snapshot(vmm, vm_, timestamp, size):
+def disk_snapshot(vmm, vm_, timestamp, size, clean):
     with transactions.transact(
         prepare=(
             f'Creating disk snapshot of {vm_.name}',
             lambda: create_vm_disk_snapshot(vmm, vm_, timestamp, size)
+        ),
+        commit=(
+            'cleaning up disk snapshot' if clean else None,
+            lambda result: lvm.remove_lv(result[0]) if clean else None
         ),
         rollback=(
             'cleaning up disk snapshot',
@@ -94,7 +98,7 @@ def add_snapshot(args):
     with contextlib.ExitStack() as snapshot_stack:
         snapshot_stack.enter_context(vm.vm_shut_down(vmm, ref_vm))
         snapshot_disk = snapshot_stack.enter_context(disk_snapshot(
-            vmm, ref_vm, timestamp, args.snapshot_size
+            vmm, ref_vm, timestamp, args.snapshot_size, clean=args.test
         ))
         new_disk = snapshot_stack.enter_context(another_disk(
             vmm, ref_vm, snapshot_disk
