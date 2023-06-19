@@ -18,9 +18,10 @@ from dg.prepare.util import windows
 
 class VirtualMachine(abc.ABC):
 
-    def __init__(self, name, host):
+    def __init__(self, name, host, system_disk=None):
         self.name = name
         self.host = host
+        self.system_disk = system_disk
 
     @abc.abstractmethod
     def is_accessible(self):
@@ -81,9 +82,11 @@ import sys
 import xml.etree.ElementTree as ET
 
 tree = ET.parse(sys.argv[1])
-nodes = tree.findall('{DISK_NODE}')
+nodes = list(node for node in tree.findall('{DISK_NODE}')
+             if node.get('dev') == '{old_disk}')
 assert len(nodes) == 1, (
-    f'expected exactly one node with selector "{DISK_NODE}", got {{nodes}}'
+    f'expected exactly one node with selector "{DISK_NODE}" '
+    f'and dev "{old_disk}", got {{nodes}}'
 )
 assert nodes[0].get('dev') == '{old_disk}', (
     f"expected disk dev to be {old_disk}, got {{nodes[0].get('dev')}}"
@@ -134,10 +137,17 @@ class Virsh(VirtualMachineManager):
 
     def get_disk(self, vm):
         disks = list(self.get_disks(vm))
-        if len(disks) != 1:
-            raise RuntimeError('Need exactly one disk for vm {vm.name}, '
-                               'got {disks}')
-        return disks[0]
+        if vm.system_disk is not None:
+            assert vm.system_disk in disks, (
+                f'Expected VM system disk {vm.system_disk} to be among '
+                f'disks, got {disks}'
+            )
+            return vm.system_disk
+        else:
+            if len(disks) != 1:
+                raise RuntimeError(f'Need exactly one disk for vm {vm.name}, '
+                                   f'got {disks}')
+            return disks[0]
 
     def set_disk(self, vm, old_disk, disk):
         with set_disk_script(old_disk, disk) as script:

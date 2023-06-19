@@ -86,7 +86,8 @@ def started(vmm, vm_):
 
 def add_snapshot(args):
     vmm = vm.Virsh()
-    ref_vm = vm.WindowsVM(args.ref_vm, args.ref_host)
+    ref_vm = vm.WindowsVM(args.ref_vm, host=args.ref_host,
+                          system_disk=args.system_disk)
     cow.check_preconditions(vmm, ref_vm)
 
     timestamp = cow.generate_timestamp()
@@ -146,7 +147,8 @@ def get_snapshots(vmm, vm):
 
 def clean_snapshots(args):
     vmm = vm.Virsh()
-    ref_vm = vm.WindowsVM(args.ref_vm, None)
+    ref_vm = vm.WindowsVM(args.ref_vm, host=None,
+                          system_disk=args.system_disk)
     snapshots = get_snapshots(vmm, ref_vm)
     if not snapshots:
         return
@@ -185,12 +187,14 @@ def parse_args(raw_args):
 
     add_parser.add_argument('ref_vm')
     add_parser.add_argument('ref_host')
+    add_parser.add_argument('--system-disk')
     add_parser.set_defaults(func=add_snapshot)
 
     clean_parser = subparsers.add_parser('clean', help='Cleanup old snapshots')
     clean_parser.add_argument('--force-latest', action='store_true')
 
     clean_parser.add_argument('ref_vm')
+    clean_parser.add_argument('--system-disk')
     clean_parser.set_defaults(func=clean_snapshots)
 
     args = parser.parse_args(config.get_args(raw_args))
