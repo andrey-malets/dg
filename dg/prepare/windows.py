@@ -23,6 +23,24 @@ from dg.prepare.util import windows
 SETUP_SCRIPTS_DIR = r'C:\Windows\Setup\Scripts'
 
 
+DEFAULT_SYSPREP_XML = os.path.join(
+    os.path.dirname(__file__), 'util', 'windows', 'sysprep.xml'
+)
+
+
+def win_path(cygwin, path):
+    if not cygwin:
+        return path
+    else:
+        drive, source_path = path.split(':', 1)
+        cygwin_path = source_path.replace('\\', '/')
+        return f'/cygdrive/{drive.lower()}{cygwin_path}'
+
+
+def escape(cygwin, cmd):
+    return cmd.replace('\\', r'\\') if cygwin else cmd
+
+
 @dataclasses.dataclass
 class Copy:
     src: str
@@ -107,17 +125,24 @@ def add_snapshot(args):
         snapshot_vm = snapshot_stack.enter_context(started(vmm, ref_vm))
         wait.wait_for(lambda: snapshot_vm.is_accessible(), 300, 5)
 
-        sysprep_xml = 'sysprep.xml'
-        windows.scp(snapshot_vm.host, args.sysprep_xml, sysprep_xml)
+        sysprep_xml = rf'C:\Users\{windows.LOGIN}\sysprep.xml'
+        windows.scp(snapshot_vm.host, args.sysprep_xml,
+                    win_path(args.cygwin, sysprep_xml))
 
-        windows.ssh(snapshot_vm.host, f'mkdir {SETUP_SCRIPTS_DIR}',
+        setup_scripts_dir = win_path(args.cygwin, SETUP_SCRIPTS_DIR)
+        windows.ssh(snapshot_vm.host,
+                    escape(args.cygwin, f'mkdir {setup_scripts_dir}'),
                     method=subprocess.call)
 
         for copy in args.copy:
-            windows.scp(snapshot_vm.host, copy.src, copy.dst)
+            windows.scp(snapshot_vm.host, copy.src,
+                        win_path(args.cygwin, copy.dst))
 
-        sysprep_cmd = (
-            r'start /w C:\Windows\system32\sysprep\sysprep.exe '
+        cmd_prefix = 'cmd /c ' if args.cygwin else ''
+
+        sysprep_cmd = escape(
+            args.cygwin,
+            rf'{cmd_prefix}start /w C:\Windows\system32\sysprep\sysprep.exe '
             f'/oobe /generalize /shutdown /unattend:{sysprep_xml}'
         )
         with windows.ssh_away(snapshot_vm.host, sysprep_cmd):
@@ -183,11 +208,10 @@ def parse_args(raw_args):
     add_parser.add_argument('-c', '--copy', default=[], action='append',
                             type=Copy)
     add_parser.add_argument('--link-snapshot')
+    add_parser.add_argument('-cw', '--cygwin', action='store_true')
     add_parser.add_argument('-t', '--test', action='store_true')
-    add_parser.add_argument(
-        '-sp', '--sysprep-xml',
-        default=os.path.join(os.path.dirname(__file__), 'sysprep.xml')
-    )
+    add_parser.add_argument('-sp', '--sysprep-xml',
+                            default=DEFAULT_SYSPREP_XML)
 
     add_parser.add_argument('ref_vm')
     add_parser.add_argument('ref_host')

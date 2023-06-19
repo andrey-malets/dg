@@ -5,8 +5,9 @@ import subprocess
 from dg.prepare.util import processes
 
 
-SSH_OPTIONS = ('-l', 'Administrator', '-o', 'ConnectTimeout=1')
-SCP_OPTIONS = ('-o', 'User=Administrator', '-o', 'ConnectTimeout=1')
+LOGIN = 'Administrator'
+SSH_OPTIONS = ('-l', LOGIN, '-o', 'ConnectTimeout=1')
+SCP_OPTIONS = ('-o', f'User={LOGIN}', '-o', 'ConnectTimeout=1')
 
 
 def is_accessible(host):
