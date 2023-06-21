@@ -5,6 +5,7 @@ import os
 import stat
 import sys
 import tempfile
+import time
 import xml.etree.ElementTree as ET
 
 from dg.prepare.util import linux
@@ -59,6 +60,9 @@ class VirtualMachineManager(abc.ABC):
         pass
 
     def destroy(self, vm):
+        pass
+
+    def wait_to_shutdown(self, vm, timeout=180, step=3):
         pass
 
     def reset(self, vm):
@@ -123,7 +127,19 @@ class Virsh(VirtualMachineManager):
     def destroy(self, vm):
         logging.warning('Destroying %s', vm.name)
         processes.log_and_call(['virsh', 'destroy', vm.name])
-        wait.wait_for(lambda: not self.is_vm_running(vm), timeout=30, step=3)
+        self.wait_to_shutdown(vm, timeout=30)
+
+    def wait_to_shutdown(self, vm, timeout=180, step=3):
+        logging.info('Waiting for %s to shut down', vm.name)
+        wait.wait_for(
+            lambda: not self.is_vm_running(vm),
+            timeout=timeout, step=step
+        )
+        final_wait = 5
+        logging.info('Waiting for extra %d seconds for virtd to '
+                     "stabilize it's state", final_wait)
+        time.sleep(5)
+        assert not self.is_vm_running(vm)
 
     def reset(self, vm):
         logging.warning('Resetting %s', vm.name)
@@ -160,7 +176,7 @@ class Virsh(VirtualMachineManager):
 @contextlib.contextmanager
 def vm_shut_down(vmm, vm):
     vm.shutdown()
-    wait.wait_for(lambda: not vmm.is_vm_running(vm), timeout=180, step=3)
+    vmm.wait_to_shutdown(vm)
     try:
         yield
     finally:

@@ -146,9 +146,7 @@ def add_snapshot(args):
             f'/oobe /generalize /shutdown /unattend:{sysprep_xml}'
         )
         with windows.ssh_away(snapshot_vm.host, sysprep_cmd):
-            logging.info('Waiting for %s to shut down', snapshot_vm.host)
-            wait.wait_for(lambda: not vmm.is_vm_running(snapshot_vm),
-                          timeout=600, step=10)
+            vmm.wait_to_shutdown(snapshot_vm, timeout=600, step=10)
 
         if args.link_snapshot:
             logging.info('Linking snapshot %s to %s', new_disk,
@@ -161,8 +159,7 @@ def add_snapshot(args):
                          snapshot_vm.name)
             wait.wait_for(lambda: snapshot_vm.is_accessible(), 900, 5)
             snapshot_vm.shutdown()
-            wait.wait_for(lambda: not vmm.is_vm_running(snapshot_vm),
-                          timeout=60, step=3)
+            vmm.wait_to_shutdown(snapshot_vm, timeout=60)
 
 
 def snapshot_glob(origin):
