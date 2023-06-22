@@ -36,7 +36,7 @@ class StoreCOWConfig(config.WithSSHCredentials, RunCommands):
 
 
 class CustomizeWindowsSetup(
-        config.WithSSHCredentials, config.WithWindows7Partition,
+        config.WithSSHCredentials, config.WithWindowsRootPartition,
         config.WithWindowsDataPartition, config.WithWindowsDriverSearchPath,
         RunCommands):
     'customize SSH credentials and sysprep config in Windows root partition'
@@ -52,7 +52,7 @@ class CustomizeWindowsSetup(
 
     def get_commands(self, host):
         mountpoint = '/mnt'
-        prefix = '/cygwin64/etc'
+        prefix = ('/cygwin64/etc' if self.is_cygwin else '/ProgramData/ssh')
         args = ['-H', win.get_hostname(host)]
         if 'userqwer' in host.props['services']:
             args += ['-a', 'user:qwer', '-A', 'user:qwer']
@@ -67,7 +67,7 @@ class CustomizeWindowsSetup(
             args += ['-c', r'"cmd /c mkdir {}"'.format(home)]
             args += ['-P', home]
         cmds = [
-            ['mount', self.get_win7_partition(), mountpoint],
+            ['mount', self.win_root_partition, mountpoint],
             ['cp /etc/ssh/ssh_host_*_key{{,.pub}} {}{}'.format(
                 mountpoint, prefix)],
             ['python3', '/tmp/customize.py'] + args + [sysprep_xml,
@@ -91,7 +91,7 @@ class CustomizeWindowsSetup(
         cmds.append(['umount', mountpoint])
 
         if self.win_data_label:
-            cmds.append(['mount', self.get_win7_data_partition(), mountpoint])
+            cmds.append(['mount', self.get_win_data_partition(), mountpoint])
             cmds.append(['rm', '-rf', '{}/Users/Administrator*'.format(
                 mountpoint)])
             cmds.append(['rm', '-rf', '{}/Users/UpdatusUser*'.format(

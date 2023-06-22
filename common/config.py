@@ -167,6 +167,8 @@ class WithAMTCredentials(stage.Stage):
                  metavar='LOGIN', default='root')
 @Option.requires('-lw', help='ssh login for Windows',
                  metavar='LOGIN', default='Administrator')
+@Option.requires('-cw', help='use cygwin', action='store_true',
+                 default=False)
 class WithSSHCredentials(stage.Stage):
     def get_login(self):
         return self.ssh_login_linux
@@ -175,6 +177,7 @@ class WithSSHCredentials(stage.Stage):
         super(WithSSHCredentials, self).parse(args)
         self.ssh_login_linux = args.ll
         self.ssh_login_windows = args.lw
+        self.is_cygwin = args.cw
 
     def run_scp(self, host, login, src, dst):
         return proc.run_process(
@@ -238,19 +241,16 @@ class WithBannedHosts(stage.Stage):
 
 
 @Option.requires(
-    '-wp', help='Windows 7 root partition label',
-    metavar='LABEL', default='windows7')
-class WithWindows7Partition(stage.Stage):
+    '-wp', help='Windows root partition label',
+    metavar='LABEL', default='windows10')
+class WithWindowsRootPartition(stage.Stage):
     def parse(self, args):
-        super(WithWindows7Partition, self).parse(args)
-        self.win7_partition = args.wp
-
-    def get_win7_partition(self):
-        return '/dev/disk/by-partlabel/{}'.format(self.win7_partition)
+        super(WithWindowsRootPartition, self).parse(args)
+        self.win_root_partition = f'/dev/disk/by-partlabel/{args.wp}'
 
 
 @Option.requires(
-    '-wd', help='Set windows partition volume path by FS label',
+    '-wd', help='Set Windows partition volume path by FS label',
     metavar='LABEL:LETTER', default=None)
 class WithWindowsDataPartition(stage.Stage):
     def parse(self, args):
@@ -258,7 +258,7 @@ class WithWindowsDataPartition(stage.Stage):
         self.win_data_label, self.win_data_letter = (
             args.wd.split(':', 1) if args.wd is not None else [None, None])
 
-    def get_win7_data_partition(self):
+    def get_win_data_partition(self):
         return '/dev/disk/by-partlabel/{}'.format(self.win_data_label)
 
 
