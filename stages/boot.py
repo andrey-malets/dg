@@ -7,7 +7,6 @@ class ConfigureBoot(config.WithConfigURL, stage.SimpleStage):
 
     LOCAL_COW = 'grub.cow'
     COW_MEMORY = 'cow-m'
-    WINDOWS = 'grub.windows7'
     DEFAULT = ''
 
     def set(self, host, value):
@@ -15,10 +14,6 @@ class ConfigureBoot(config.WithConfigURL, stage.SimpleStage):
 
     def rollback_single(self, host):
         self.set(host, ConfigureBoot.DEFAULT)
-
-
-def BootsToByDefault(host):
-    return host.props.get('boot') == ConfigureBoot.WINDOWS
 
 
 def BootsToLocalLinuxByDefault(host):
@@ -36,7 +31,10 @@ class SetBootIntoLocalWindows(ConfigureBoot):
     'enable boot to local Windows'
 
     def run_single(self, host):
-        self.set(host, ConfigureBoot.WINDOWS)
+        windows_partition = (
+            host.props.get('windows', {}).get('boot_partition', 'windows10')
+        )
+        self.set(host, f'grub.{windows_partition}')
 
 
 class SetBootIntoLocalLinux(ConfigureBoot):

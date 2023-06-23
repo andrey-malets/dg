@@ -167,8 +167,6 @@ class WithAMTCredentials(stage.Stage):
                  metavar='LOGIN', default='root')
 @Option.requires('-lw', help='ssh login for Windows',
                  metavar='LOGIN', default='Administrator')
-@Option.requires('-cw', help='use cygwin', action='store_true',
-                 default=False)
 class WithSSHCredentials(stage.Stage):
     def get_login(self):
         return self.ssh_login_linux
@@ -177,7 +175,6 @@ class WithSSHCredentials(stage.Stage):
         super(WithSSHCredentials, self).parse(args)
         self.ssh_login_linux = args.ll
         self.ssh_login_windows = args.lw
-        self.is_cygwin = args.cw
 
     def run_scp(self, host, login, src, dst):
         return proc.run_process(

@@ -20,7 +20,8 @@ Command = collections.namedtuple('Command', (
 
 REBOOT_MARKER = '/tmp/rebooting'
 
-CHECK_WIN = 'uname | grep -q NT'
+CHECK_WIN = 'ver | findstr /I Windows'
+CHECK_WIN_CYGWIN = 'uname | grep -q NT'
 REBOOT_WIN = 'shutdown /r /t 0'
 
 CHECK_LINUX = '! test -f {}'.format(REBOOT_MARKER)
@@ -75,7 +76,9 @@ class CheckIsAccessible(ExecuteRemoteCommands):
     'check whether the host is accessible via SSH in some way'
 
     def get_commands(self, host):
-        return (get_win_commands(host, self.ssh_login_windows, CHECK_WIN) +
+        is_cygwin = host.props.get('windows', {}).get('is_cygwin', False)
+        win_cmd = (CHECK_WIN_CYGWIN if is_cygwin else CHECK_WIN)
+        return (get_win_commands(host, self.ssh_login_windows, win_cmd) +
                 [Command(self.ssh_login_linux, [CHECK_LINUX], True)])
 
 

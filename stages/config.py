@@ -52,7 +52,8 @@ class CustomizeWindowsSetup(
 
     def get_commands(self, host):
         mountpoint = '/mnt'
-        prefix = ('/cygwin64/etc' if self.is_cygwin else '/ProgramData/ssh')
+        is_cygwin = host.props.get('windows', {}).get('is_cygwin', False)
+        prefix = ('/cygwin64/etc' if is_cygwin else '/ProgramData/ssh')
         args = ['-H', win.get_hostname(host)]
         if 'userqwer' in host.props['services']:
             args += ['-a', 'user:qwer', '-A', 'user:qwer']
