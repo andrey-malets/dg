@@ -50,7 +50,8 @@ def execute_with(raw_args, methods):
     the_state = state.State(parser, method_args)
     with contextlib.ExitStack() as stack:
         stack.enter_context(log.capturing(method_args, the_state))
-        stack.enter_context(lock.locked(the_state, method_args.lock))
+        for lock_file in sorted(method_args.lock):
+            stack.enter_context(lock.locked(the_state, lock_file))
         return 0 if method.run(the_state) else 1
 
 
@@ -69,8 +70,12 @@ class Option(object):
     def add_common_params(parser, method_classes):
         state.State.add_params(parser)
         log.add_params(parser)
-        parser.add_argument('--lock', help='Lock specified file exclusively '
-                                           'while running deploy')
+        parser.add_argument(
+            '--lock', type=lock.lock, nargs='+',
+            help='Lock specified file while running deploy. Use exclusive '
+                 'lock by default, shared lock can be specified by appending '
+                 '",r" to file name'
+        )
         parser.add_argument(
             '-m', choices=[method.name for method in method_classes],
             help='Deploy method', required=True)
