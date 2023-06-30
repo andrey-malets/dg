@@ -5,15 +5,19 @@ from common import config, stage
 
 
 class EnsureNetworkSpeed(config.WithLocalAddress,
+                         config.WithNetworkParallelism,
                          config.WithSSHCredentials,
                          stage.ParallelStage):
     'ensure sufficient throughput of network interface'
 
-    def __init__(self, poolsize=10, minimum=500, time=5):
-        super().__init__(poolsize)
-        self.minimum = minimum
+    def __init__(self, time=5):
+        super().__init__()
         self.time = time
         self.server = None
+
+    def parse(self, args):
+        super().parse(args)
+        self.poolsize = self.network_connections
 
     @contextlib.contextmanager
     def prepared(self):
@@ -42,16 +46,16 @@ class EnsureNetworkSpeed(config.WithLocalAddress,
                     'failed to parse iperf output, it was: {}'.format(output))
                 return
             speed = int(tokens[8]) / 1000000
-            if speed < self.minimum:
+            if speed < self.network_speed:
                 self.fail(
                     ('insufficient network speed: need {} Mbits/s, ' +
-                     'got {} Mbits/s').format(self.minimum, speed))
+                     'got {} Mbits/s').format(self.network_speed, speed))
                 return
-            elif speed < self.minimum * 1.2:
+            elif speed < self.network_speed * 1.2:
                 host.state.log.warning(
                     ('measured network speed for {} is {} Mbits/s, ' +
                      'which is close to minimum of {} Mbits/s').format(
-                        host.name, speed, self.minimum))
+                        host.name, speed, self.network_speed))
             else:
                 host.state.log.info(
                     'measured network speed for {} is {} Mbits/s'.format(

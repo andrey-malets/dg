@@ -200,6 +200,17 @@ class WithLocalAddress(stage.Stage):
         self.local_addr = args.l
 
 
+@Option.requires('-nc', help='Parallel network connections allowed',
+                 metavar='CONNECTIONS', type=int, default=2)
+@Option.requires('-ns', help='Network speed required on each host, in MB/s',
+                 metavar='SPEED', type=int, default=300)
+class WithNetworkParallelism(stage.Stage):
+    def parse(self, args):
+        super(WithNetworkParallelism, self).parse(args)
+        self.network_connections = args.nc
+        self.network_speed = args.ns
+
+
 @Option.requires(
     '-n', help='Deploy local INPUT into OUTPUT on all the hosts with ndd',
     metavar='{HOST:}?INPUT{,iargs}?:OUTPUT{,oargs}?{+args}?', action='append',
