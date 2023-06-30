@@ -50,8 +50,9 @@ def execute_with(raw_args, methods):
     the_state = state.State(parser, method_args)
     with contextlib.ExitStack() as stack:
         stack.enter_context(log.capturing(method_args, the_state))
-        for lock_file in sorted(method_args.lock):
-            stack.enter_context(lock.locked(the_state, lock_file))
+        if method_args.lock:
+            for lock_file in sorted(method_args.lock):
+                stack.enter_context(lock.locked(the_state, lock_file))
         return 0 if method.run(the_state) else 1
 
 
