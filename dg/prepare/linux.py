@@ -149,6 +149,12 @@ def add_snapshot(args):
         logging.info('Pushing update to inactive clients with reboot')
         reboot_inactive_clients(vmm, ref_vm, test_vm)
 
+    if args.packages:
+        with open(args.packages, 'w') as packages_output:
+            packages_output.write(
+                linux_util.collect_installed_packages(test_vm.host)
+            )
+
 
 def clean_snapshot(output, cache_config, name, force=False):
     backstore_name = iscsi.get_iscsi_backstore_name(name)
@@ -253,6 +259,9 @@ def parse_args(raw_args):
                                  'deploying to this locaiton')
     add_parser.add_argument('--push', action='store_true',
                             help='Try to push update to inactive clients')
+    add_parser.add_argument('--packages',
+                            help='Put a list of packages installed on '
+                                 'resulting image to specified file')
 
     add_parser.add_argument('ref_vm')
     add_parser.add_argument('ref_host')

@@ -43,3 +43,8 @@ def try_reboot_if_idle(host):
             reboot(host)
         except Exception:
             logging.exception('Failed to reboot host %s', host)
+
+
+def collect_installed_packages(host):
+    cmd = "dpkg-query -W -f='${Package;-50}(${Version})\n'"
+    return processes.ssh(host, cmd, output=True)
