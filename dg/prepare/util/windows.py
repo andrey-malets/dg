@@ -1,6 +1,7 @@
 import contextlib
 import logging
 import subprocess
+import tempfile
 
 from dg.prepare.util import processes
 
@@ -46,6 +47,36 @@ def shutdown(host):
     return ssh(host, 'shutdown /s /t 0')
 
 
-def scp(host, src, dst):
+def scp(host, src, dst, back=False):
     logging.info('Copying %s to %s on %s', src, dst, host)
-    return processes.scp(host, src, dst, options=SCP_OPTIONS)
+    return processes.scp(host, src, dst, options=SCP_OPTIONS, back=back)
+
+
+@contextlib.contextmanager
+def collected_soft(host, cygwin, output):
+    collect_cmd = f'wmic /output:{output} product get name,version'
+    try:
+        logging.debug('Collecting installed software on %s to %s: %s',
+                      host, output, collect_cmd)
+        ssh(host, collect_cmd)
+        yield output
+    finally:
+        del_cmd = f'{"rm" if cygwin else "del"} {output}'
+        try:
+            logging.debug('Removing collected software file %s on %s',
+                          output, host)
+            ssh(host, del_cmd)
+        except Exception:
+            logging.exception('Failed to remove %s on %s', output, host)
+
+
+def collect_installed_packages(host, cygwin):
+    with contextlib.ExitStack() as stack:
+        output = stack.enter_context(
+            tempfile.NamedTemporaryFile(prefix=f'{host}_soft_', suffix='.txt')
+        )
+        host_output = stack.enter_context(
+            collected_soft(host, cygwin, 'soft.txt')
+        )
+        scp(host, host_output, output.name, back=True)
+        return output.read().decode('utf-16')

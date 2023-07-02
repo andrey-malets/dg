@@ -161,6 +161,12 @@ def add_snapshot(args):
             snapshot_vm.shutdown()
             vmm.wait_to_shutdown(snapshot_vm, timeout=60)
 
+    if args.packages:
+        with open(args.packages, 'w') as packages_output:
+            packages_output.write(
+                windows.collect_installed_packages(ref_vm.host, args.cygwin)
+            )
+
 
 def snapshot_glob(origin):
     return f'{origin}-at-*'
@@ -209,6 +215,9 @@ def parse_args(raw_args):
     add_parser.add_argument('-t', '--test', action='store_true')
     add_parser.add_argument('-sp', '--sysprep-xml',
                             default=DEFAULT_SYSPREP_XML)
+    add_parser.add_argument('--packages',
+                            help='Put a list of packages installed on '
+                                 'resulting image to specified file')
 
     add_parser.add_argument('ref_vm')
     add_parser.add_argument('ref_host')
