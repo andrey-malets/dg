@@ -84,25 +84,43 @@ def send_report(args, state, log_file, start, finish):
 
 
 @contextlib.contextmanager
+def temporary_log_file(method):
+    fd, log_file = tempfile.mkstemp(prefix='dg_{}_'.format(method))
+    os.close(fd)
+    try:
+        yield log_file
+    finally:
+        try:
+            os.unlink(log_file)
+        except Exception:
+            logging.exception('Failed to unlink temporary log file %s',
+                              log_file)
+
+
+@contextlib.contextmanager
 def capturing(args, state):
-    log_file = None
-    if args.r:
-        fd, log_file = tempfile.mkstemp(prefix='dg_{}_'.format(args.m))
-        os.close(fd)
-        handler = logging.FileHandler(log_file)
-    else:
-        handler = logging.StreamHandler()
+    with contextlib.ExitStack() as stack:
+        log_file = None
+        if args.r:
+            log_file = stack.enter_context(temporary_log_file(args.m))
+            handler = logging.FileHandler(log_file)
+        else:
+            handler = logging.StreamHandler()
 
-    handler.setFormatter(CustomFormatter(args.C))
-    state.log.setLevel(logging.INFO)
-    state.log.addHandler(handler)
+        handler.setFormatter(CustomFormatter(args.C))
+        state.log.setLevel(logging.INFO)
+        state.log.addHandler(handler)
 
-    start = datetime.datetime.now()
-    yield
-    finish = datetime.datetime.now()
+        start = datetime.datetime.now()
+        try:
+            yield
+        finally:
+            finish = datetime.datetime.now()
 
-    state.log.removeHandler(handler)
-    handler.close()
-    if log_file:
-        send_report(args, state, log_file, start, finish)
-        os.unlink(log_file)
+            state.log.removeHandler(handler)
+            handler.close()
+            if log_file:
+                try:
+                    send_report(args, state, log_file, start, finish)
+                except Exception:
+                    logging.exception('Failed to send report')

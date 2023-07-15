@@ -40,7 +40,7 @@ def locked(state, lock):
             yield
         except OSError as e:
             if e.errno == errno.EAGAIN:
-                logging.error('%s is already locked, exiting', lock.file_name)
+                state.log.error('%s is already locked, exiting', lock.file_name)
                 sys.exit(2)
             raise
         else:
