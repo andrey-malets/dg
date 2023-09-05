@@ -16,7 +16,7 @@ class TParser(html.parser.HTMLParser):
 
 class StdMStage(config.WithAMTCredentials, stage.ParallelStage):
     ON_RE = re.compile('Power state: On')
-    OFF_RE = re.compile('Power state: (Off|Standby)')
+    OFF_RE = re.compile('Power state: (Standby|Hibernate|Off)')
 
     TIMEOUT = 5
 
