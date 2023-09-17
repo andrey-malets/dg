@@ -42,8 +42,9 @@ class SimpleStage(Stage):
 def _run_forked(args):
     stage, host = args
     try:
-        stage.run_single(host)
-        return stage.failed, stage.failure_reason
+        with host.state.current_host(host):
+            stage.run_single(host)
+            return stage.failed, stage.failure_reason
     except Exception as e:
         host.state.log.exception('Parallel stage failed for {}'.format(host))
         return True, 'exception occured: {}'.format(e)

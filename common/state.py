@@ -1,4 +1,11 @@
+import contextlib
 import logging
+
+
+class HostLoggerAdapter(logging.LoggerAdapter):
+
+    def process(self, msg, kwargs):
+        return '[%s] %s' % (self.extra['host'], msg), kwargs
 
 
 class State(object):
@@ -20,6 +27,24 @@ class State(object):
         self.failed_hosts = set()
         self.all_failed_hosts = set()
 
+        self._current_host = None
+        self.logger = logging.getLogger(__name__)
+
+    @contextlib.contextmanager
+    def current_host(self, host):
+        assert self._current_host is None
+        self._current_host = host
+        old_logger = self.logger
+        try:
+            self.logger = HostLoggerAdapter(
+                old_logger,
+                {'host': self._current_host}
+            )
+            yield self._current_host
+        finally:
+            self._current_host = None
+            self.logger = old_logger
+
     @property
     def log(self):
-        return logging.getLogger(__name__)
+        return self.logger
