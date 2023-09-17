@@ -10,7 +10,7 @@ from util import win
 class Timeouts:
     TINY = (datetime.timedelta(seconds=4), datetime.timedelta(seconds=20))
     NORMAL = (datetime.timedelta(seconds=10), datetime.timedelta(minutes=10))
-    BIG = (datetime.timedelta(minutes=1), datetime.timedelta(minutes=30))
+    BIG = (datetime.timedelta(seconds=30), datetime.timedelta(minutes=30))
 
 
 Command = collections.namedtuple('Command', ('login', 'command'))
