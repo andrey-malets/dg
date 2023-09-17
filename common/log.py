@@ -55,10 +55,10 @@ def send_report(args, state, log_file, start, finish):
         subject += ' (ALL failed)'
     elif state.all_failed_hosts:
         subject += ' ({} failed)'.format(
-            ', '.join(map(lambda host: host.sname, state.all_failed_hosts)))
+            ', '.join(host.sname for host in sorted(state.all_failed_hosts)))
 
         text += '\n'
-        for host in state.all_failed_hosts:
+        for host in sorted(state.all_failed_hosts):
             stage, reason = host.failure
             text += '{} failed, stage: {}, reason: {}\n'.format(
                 host.name, stage, reason)
