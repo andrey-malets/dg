@@ -38,7 +38,7 @@ class ExecuteRemoteCommands(config.WithSSHCredentials, stage.ParallelStage):
 
     def check_result(self, host, command):
         rv, _ = self.run_ssh(host, command.command,
-                             login=command.login, opts=['ConnectTimeout=1'])
+                             login=command.login, opts=['ConnectTimeout=5'])
         return rv
 
     def run_single(self, host):
