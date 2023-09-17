@@ -13,9 +13,7 @@ class Timeouts:
     BIG = (datetime.timedelta(minutes=1), datetime.timedelta(minutes=30))
 
 
-Command = collections.namedtuple('Command', (
-    'login', 'command', 'check_rv',
-))
+Command = collections.namedtuple('Command', ('login', 'command'))
 
 
 REBOOT_MARKER = '/tmp/rebooting'
@@ -41,7 +39,7 @@ class ExecuteRemoteCommands(config.WithSSHCredentials, stage.ParallelStage):
     def check_result(self, host, command):
         rv, _ = self.run_ssh(host, command.command,
                              login=command.login, opts=['ConnectTimeout=1'])
-        return rv if command.check_rv else 0
+        return rv
 
     def run_single(self, host):
         commands = self.get_commands(host)
@@ -64,11 +62,11 @@ class WaitUntilBootedIntoCOWMemory(ExecuteRemoteCommands):
     'wait with SSH until host boots into COW memory image'
 
     def get_commands(self, host):
-        return [Command(self.ssh_login_linux, [CHECK_LINUX_MEM], True)]
+        return [Command(self.ssh_login_linux, [CHECK_LINUX_MEM])]
 
 
 def get_win_commands(host, login, cmd):
-    return [Command(login, [cmd], True)
+    return [Command(login, [cmd])
             for login in win.get_possible_logins(host, login)]
 
 
@@ -79,7 +77,7 @@ class CheckIsAccessible(ExecuteRemoteCommands):
         is_cygwin = host.props.get('windows', {}).get('is_cygwin', False)
         win_cmd = (CHECK_WIN_CYGWIN if is_cygwin else CHECK_WIN)
         return (get_win_commands(host, self.ssh_login_windows, win_cmd) +
-                [Command(self.ssh_login_linux, [CHECK_LINUX], True)])
+                [Command(self.ssh_login_linux, [CHECK_LINUX])])
 
 
 class RebootHost(ExecuteRemoteCommands):
@@ -87,14 +85,14 @@ class RebootHost(ExecuteRemoteCommands):
 
     def get_commands(self, host):
         return (get_win_commands(host, self.ssh_login_windows, REBOOT_WIN) +
-                [Command(self.ssh_login_linux, [REBOOT_LINUX], False)])
+                [Command(self.ssh_login_linux, [REBOOT_LINUX])])
 
 
 class MaybeRebootLocalLinux(ExecuteRemoteCommands):
     'reboot host booted into local Linux if it is not default boot'
 
     def get_commands(self, host):
-        return ([Command(self.ssh_login_linux, [REBOOT_LINUX], False)]
+        return ([Command(self.ssh_login_linux, [REBOOT_LINUX])]
                 if not boot.BootsToLocalLinuxByDefault(host) else [])
 
 
@@ -109,14 +107,14 @@ class WaitUntilBootedIntoLocalLinux(ExecuteRemoteCommands):
     'wait until host has booted into local Linux'
 
     def get_commands(self, host):
-        return [Command(self.ssh_login_linux, [CHECK_LINUX], True)]
+        return [Command(self.ssh_login_linux, [CHECK_LINUX])]
 
 
 class RebootNonDefaultOS(ExecuteRemoteCommands):
     'reboot non-default OS'
 
     def get_commands(self, host):
-        return ([Command(self.ssh_login_linux, [REBOOT_LINUX], False)]
+        return ([Command(self.ssh_login_linux, [REBOOT_LINUX])]
                 if boot.BootsToWindowsByDefault(host)
                 else get_win_commands(host, self.ssh_login_windows,
                                       REBOOT_WIN))
