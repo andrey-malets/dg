@@ -80,7 +80,13 @@ class RunNDD(config.WithLocalAddress, config.WithNDDArgs, config.WithConfigURL,
                         ['-d', '{}@{}'.format(self.get_login(),
                                               str(host.name))])
 
-                rv, _ = proc.run_process(cmdline, state.log)
+                rv, stdout = proc.run_process(cmdline, state.log)
+                for line in stdout.splitlines():
+                    logger = (
+                        state.log.info if rv == 0 else state.log.warning
+                    )
+                    logger('stdout: %s', line)
+
                 if rv != 0:
                     for host in sorted(state.active_hosts):
                         host.fail(self, 'failed to run ndd.py')

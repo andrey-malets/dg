@@ -1,15 +1,16 @@
 import subprocess
 
 
-def run_process(args, log):
+def run_process(args, log, stdout=subprocess.PIPE, stderr=subprocess.PIPE):
     log.info(f'running {args}')
     proc = subprocess.Popen(
-        args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+        args, stdout=stdout, stderr=stderr, text=True
     )
-    stdout, stderr = proc.communicate()
+    stdout, stderr_ = proc.communicate()
 
-    if len(stderr) > 0:
-        log.error(stderr)
+    if stderr_:
+        for line in stderr_.splitlines():
+            log.info('stderr: %s', line)
 
     return (proc.returncode, stdout)
 
