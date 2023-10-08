@@ -22,7 +22,7 @@ class SimpleMethod(method.Method):
         ssh.RebootHost(*ssh.Timeouts.TINY),
         ssh.WaitUntilBootedIntoLocalWindows(*ssh.Timeouts.BIG),
         boot.SetBootIntoLocalLinux(),
-        ssh.RebootHost(*ssh.Timeouts.TINY),
+        ssh.RebootHost(*ssh.Timeouts.SMALL),
         ssh.WaitUntilBootedIntoLocalLinux(*ssh.Timeouts.NORMAL),
         boot.ResetBoot(),
         ssh.MaybeRebootLocalLinux(*ssh.Timeouts.TINY),
