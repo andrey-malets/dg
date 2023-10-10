@@ -207,7 +207,7 @@ def parse_args(raw_args):
     )
 
     add_parser = subparsers.add_parser('add', help='Add new snapshot')
-    add_parser.add_argument('-s', '--snapshot-size', default='10G')
+    add_parser.add_argument('-s', '--snapshot-size', default='20G')
     add_parser.add_argument('-c', '--copy', default=[], action='append',
                             type=Copy)
     add_parser.add_argument('--link-snapshot')
