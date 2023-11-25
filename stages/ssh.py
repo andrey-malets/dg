@@ -24,7 +24,11 @@ CHECK_WIN = 'ver | findstr /I Windows'
 CHECK_WIN_CYGWIN = 'uname | grep -q NT'
 REBOOT_WIN = 'shutdown /r /t 0'
 
-CHECK_LINUX = f'test -f {PUPPET_LAST_RUN_REPORT} && ! test -f {REBOOT_MARKER}'
+CHECK_LINUX = (
+    f'test -f {PUPPET_LAST_RUN_REPORT} && '
+    f'grep "^status:" {PUPPET_LAST_RUN_REPORT} | egrep -q "(un)?changed" && '
+    f'! test -f {REBOOT_MARKER}'
+)
 CHECK_LINUX_MEM = f'grep -q cowtype=mem /proc/cmdline && {CHECK_LINUX}'
 REBOOT_LINUX = 'touch {} && shutdown -r now'.format(REBOOT_MARKER)
 
