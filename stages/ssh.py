@@ -17,14 +17,15 @@ class Timeouts:
 Command = collections.namedtuple('Command', ('login', 'command'))
 
 
+PUPPET_LAST_RUN_REPORT = '/var/cache/puppet/state/last_run_report.yaml'
 REBOOT_MARKER = '/tmp/rebooting'
 
 CHECK_WIN = 'ver | findstr /I Windows'
 CHECK_WIN_CYGWIN = 'uname | grep -q NT'
 REBOOT_WIN = 'shutdown /r /t 0'
 
-CHECK_LINUX = '! test -f {}'.format(REBOOT_MARKER)
-CHECK_LINUX_MEM = 'grep -q cowtype=mem /proc/cmdline && ' + CHECK_LINUX
+CHECK_LINUX = f'test -f {PUPPET_LAST_RUN_REPORT} && ! test -f {REBOOT_MARKER}'
+CHECK_LINUX_MEM = f'grep -q cowtype=mem /proc/cmdline && {CHECK_LINUX}'
 REBOOT_LINUX = 'touch {} && shutdown -r now'.format(REBOOT_MARKER)
 
 
