@@ -7,8 +7,8 @@ from dg.prepare.util import processes
 
 
 LOGIN = 'Administrator'
-SSH_OPTIONS = ('-l', LOGIN, '-o', 'ConnectTimeout=1')
-SCP_OPTIONS = ('-o', f'User={LOGIN}', '-o', 'ConnectTimeout=1')
+SSH_OPTIONS = ('-l', LOGIN, '-o', 'ConnectTimeout=5')
+SCP_OPTIONS = ('-o', f'User={LOGIN}', '-o', 'ConnectTimeout=5')
 
 
 def is_accessible(host):
