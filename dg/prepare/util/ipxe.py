@@ -23,7 +23,7 @@ def generate_ipxe_config(output, iscsi_target_name, kernel, initrd):
             f'set itn {iscsi_target_name}',
             (
                 'set iscsi_params '
-                'iscsi_target_ip=${iti} iscsi_target_name=${itn}',
+                'iscsi_target_ip=${iti} iscsi_target_name=${itn}'
             ),
             (
                 'set cow_params '
