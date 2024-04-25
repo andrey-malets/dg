@@ -16,18 +16,30 @@ def generate_ipxe_config(output, iscsi_target_name, kernel, initrd):
     initrd_path = os.path.relpath(initrd, output)
     config_path = ipxe_config_filename(output, iscsi_target_name)
     with open(config_path, 'w') as config_output:
-        config_output.write(f'''#!ipxe
+        config_output.write('\n'.join([
+            '#!ipxe',
+            '',
+            f'set iti {socket.getfqdn()}',
+            f'set itn {iscsi_target_name}',
+            (
+                'set iscsi_params '
+                'iscsi_target_ip=${iti} iscsi_target_name=${itn}',
+            ),
+            (
+                'set cow_params '
+                'cowsrc=network cowtype=${cowtype} root=/dev/mapper/root '
+                '${console}'
+            ),
+            (
+                'set params '
+                '${iscsi_params} ${cow_params}'
+            ),
+            f'kernel {kernel_path} BOOTIF=01-${{netX/mac}} ${{params}} quiet',
+            f'initrd {initrd_path}',
+            'boot',
+            '',
+        ]))
 
-set iti {socket.getfqdn()}
-set itn {iscsi_target_name}
-set iscsi_params iscsi_target_ip=${{iti}} iscsi_target_name=${{itn}}
-set cow_params cowsrc=network cowtype=${{cowtype}} root=/dev/mapper/root
-set params ${{iscsi_params}} ${{cow_params}}
-
-kernel {kernel_path} BOOTIF=01-${{netX/mac}} ${{params}} quiet
-initrd {initrd_path}
-boot
-''')
     with transactions.transact(
         rollback=(
             f'cleaning up iSCSI config {config_path}',
