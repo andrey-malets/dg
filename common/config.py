@@ -192,6 +192,12 @@ class WithSSHCredentials(stage.Stage):
         return proc.run_remote_process(
             host.name, login, args, host.state.log, opts)
 
+    def run_ssh_checked(self, host, args, login, description, opts=None):
+        rv, output = self.run_ssh(host, args, login, opts=opts)
+        if rv:
+            raise RuntimeError(f'failed to {description}')
+        return output
+
 
 @Option.requires('-l', help='Local address', metavar='ADDR')
 class WithLocalAddress(stage.Stage):
