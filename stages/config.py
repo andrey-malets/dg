@@ -4,10 +4,10 @@ import os
 
 
 class RunCommands(stage.ParallelStage):
-    def get_commands(self, host):
+    def get_files_to_copy(self, host):
         return []
 
-    def get_files_to_copy(self, host):
+    def get_commands(self, host):
         return []
 
     def run_single(self, host):
