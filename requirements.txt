@@ -16,4 +16,4 @@ pyflakes==2.1.1
 requests==2.32.4
 termcolor==1.1.0
 typing==3.7.4.1
-urllib3==1.26.19
+urllib3==2.5.0
