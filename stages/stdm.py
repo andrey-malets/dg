@@ -1,7 +1,11 @@
+import copy
+import functools
 import html.parser
-import time
 import re
-import requests
+import time
+import urllib.error
+import urllib.parse
+import urllib.request
 
 from common import config, stage
 
@@ -20,27 +24,32 @@ class StdMStage(config.WithAMTCredentials, stage.ParallelStage):
 
     TIMEOUT = 10
 
-    def make_request(self, method, host, url, validate=True, **args):
-        response = method('http://{}:16992/{}'.format(host, url),
-                          auth=requests.auth.HTTPDigestAuth(
-                              *self.amt_creds.get_credentials(host)),
-                          timeout=self.TIMEOUT,
-                          **args)
-        if validate:
-            response.raise_for_status()
-        return response
+    @functools.cache
+    def opener_with_auth(self, uri):
+        host = urllib.parse.urlparse(uri).netloc
+        passman = urllib.request.HTTPPasswordMgrWithDefaultRealm()
+        passman.add_password(None, uri, *self.amt_creds.get_credentials(host))
 
-    def get(self, host, url):
-        return self.make_request(requests.get, host, url)
+        return urllib.request.build_opener(
+            urllib.request.HTTPDigestAuthHandler(passman)
+        )
 
-    def post(self, host, url, **params):
-        return self.make_request(requests.post, host, url, validate=True,
-                                 data=params)
+    def make_request(self, host, url, validate=True, data=None):
+        uri = 'http://{}:16992/{}'.format(host, url)
+        opener = self.opener_with_auth(uri)
+        try:
+            with opener.open(uri, data, self.TIMEOUT) as response:
+                return response.read().decode()
+        except urllib.error.URLError:
+            if validate:
+                raise
 
     def boot_control(self, host, **params):
         parser = TParser()
-        parser.feed(self.get(host, 'remote.htm').text)
-        return self.post(host, 'remoteform', t=parser.t, **params)
+        parser.feed(self.make_request(host, 'remote.htm'))
+        data = copy.deepcopy(params)
+        data['t'] = parser.t
+        return self.make_request(host, 'remoteform', data=data)
 
 
 class WakeupStdMHosts(StdMStage):
@@ -48,7 +57,7 @@ class WakeupStdMHosts(StdMStage):
 
     def get_status(self, host, log):
         try:
-            response_text = self.get(host, 'remote.htm').text
+            response_text = self.make_request(host, 'remote.htm')
             on = WakeupStdMHosts.ON_RE.search(response_text) is not None
             off = WakeupStdMHosts.OFF_RE.search(response_text) is not None
             assert (on and not off) or (off and not on), \
