@@ -1,4 +1,3 @@
-import copy
 import functools
 import html.parser
 import re
@@ -24,32 +23,38 @@ class StdMStage(config.WithAMTCredentials, stage.ParallelStage):
 
     TIMEOUT = 10
 
+    @classmethod
+    def base_url(cls, host):
+        return f'http://{host}:16992'
+
     @functools.cache
-    def opener_with_auth(self, uri):
-        host = urllib.parse.urlparse(uri).netloc
+    def opener_with_auth(self, host):
         passman = urllib.request.HTTPPasswordMgrWithDefaultRealm()
-        passman.add_password(None, uri, *self.amt_creds.get_credentials(host))
+        passman.add_password(
+            None, self.base_url(host), *self.amt_creds.get_credentials(host)
+        )
 
         return urllib.request.build_opener(
             urllib.request.HTTPDigestAuthHandler(passman)
         )
 
-    def make_request(self, host, url, validate=True, data=None):
-        uri = 'http://{}:16992/{}'.format(host, url)
-        opener = self.opener_with_auth(uri)
-        try:
-            with opener.open(uri, data, self.TIMEOUT) as response:
-                return response.read().decode()
-        except urllib.error.URLError:
-            if validate:
-                raise
+    def make_request(self, host, url, *, data=None):
+        opener = self.opener_with_auth(host)
+        uri = f'{self.base_url(host)}/{url}'
+        with opener.open(uri, data, self.TIMEOUT) as response:
+            return response.read().decode()
 
     def boot_control(self, host, **params):
         parser = TParser()
         parser.feed(self.make_request(host, 'remote.htm'))
-        data = copy.deepcopy(params)
-        data['t'] = parser.t
-        return self.make_request(host, 'remoteform', data=data)
+        data = {
+            str(k).encode(): str(v).encode()
+            for k, v in params.items()
+        }
+        data[b't'] = parser.t.encode()
+        return self.make_request(
+            host, 'remoteform', data=urllib.parse.urlencode(data).encode()
+        )
 
 
 class WakeupStdMHosts(StdMStage):
