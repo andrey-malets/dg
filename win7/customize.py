@@ -69,7 +69,7 @@ def get(tree, pass_, component, prop):
 
 def set_computer_name(tree, name):
     get(tree, 'specialize', 'Microsoft-Windows-Shell-Setup',
-        'ComputerName').text = name
+        'ComputerName').text = name[:15]
 
 
 def set_auto_join(tree, domain, username, password):
