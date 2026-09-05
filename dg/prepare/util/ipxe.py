@@ -81,7 +81,7 @@ def saved_config(path):
 def published_ipxe_config(output, config, testing=False):
     path = os.path.join(output, 'boot-test.ipxe' if testing else 'boot.ipxe')
     logging.info(f'Publishing{" testing" if testing else ""} iPXE config '
-                 'to %s', path)
+                 '%s to %s', config, path)
     with contextlib.ExitStack() as stack:
         stack.enter_context(saved_config(path))
         stack.enter_context(transactions.transact(
