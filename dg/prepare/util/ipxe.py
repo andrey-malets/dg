@@ -58,7 +58,7 @@ def saved_config(path):
     except FileNotFoundError:
         pass
 
-    if not os.path.exists(path):
+    if not os.path.lexists(path):
         logging.warning('%s does not exist', path)
     else:
         os.rename(path, old_path)
@@ -67,7 +67,7 @@ def saved_config(path):
         yield old_path
     except Exception:
         logging.warning('Restoring config %s from %s', path, old_path)
-        if os.path.exists(old_path):
+        if os.path.lexists(old_path):
             os.rename(old_path, path)
         raise
     else:
