@@ -42,7 +42,7 @@ def generate_ipxe_config(output, iscsi_target_name, kernel, initrd):
 
     with transactions.transact(
         rollback=(
-            f'cleaning up iSCSI config {config_path}',
+            f'cleaning up iPXE config {config_path}',
             lambda _: os.remove(config_path)
         )
     ):
