@@ -77,13 +77,13 @@ def saved_config(path):
             pass
 
 
-def ipxe_release_filename(output, testing=False):
+def release_filename(output, testing=False):
     return os.path.join(output, 'boot-test.ipxe' if testing else 'boot.ipxe')
 
 
 @contextlib.contextmanager
 def released_ipxe_config(output, config, testing=False):
-    release = ipxe_release_filename(output, testing)
+    release = release_filename(output, testing)
     logging.info(f'Publishing{" testing" if testing else ""} iPXE config '
                  '%s to %s', config, release)
     with contextlib.ExitStack() as stack:

@@ -234,6 +234,15 @@ def clean_snapshots(args):
     if args.force_latest:
         logging.warning('Removing latest snapshot %s', latest)
         clean_snapshot(args.output, args.cache_config, latest, force=True)
+        for release in (
+            ipxe.release_filename(args.output),
+            ipxe.release_filename(args.output, testing=True),
+        ):
+            logging.warning('Removing iPXE release %s', release)
+            try:
+                os.remove(release)
+            except FileNotFoundError:
+                pass
 
 
 def parse_args(raw_args):
