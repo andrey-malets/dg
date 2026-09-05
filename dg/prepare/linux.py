@@ -131,19 +131,19 @@ def add_snapshot(args):
         iscsi_target_name = snapshot_stack.enter_context(
             iscsi.publish_to_iscsi(snapshot_disk)
         )
-        ipxe_config = snapshot_stack.enter_context(ipxe.generate_ipxe_config(
+        ipxe_config = snapshot_stack.enter_context(ipxe.generate_config(
             args.output, iscsi_target_name, kernel, initrd
         ))
 
         snapshot_stack.enter_context(vm.reset_back_on_failure(vmm, test_vm))
-        snapshot_stack.enter_context(ipxe.released_ipxe_config(
+        snapshot_stack.enter_context(ipxe.released_config(
             args.output, ipxe_config, testing=True
         ))
         reboot_and_check_test_vm(vmm, test_vm, timestamp)
-        ipxe_config = snapshot_stack.enter_context(
-            ipxe.released_ipxe_config(args.output, ipxe_config)
+        release = snapshot_stack.enter_context(
+            ipxe.released_config(args.output, ipxe_config)
         )
-        logging.info('Released iPXE config to %s', ipxe_config)
+        logging.info('Released iPXE config to %s', release)
 
     if args.push:
         logging.info('Pushing update to inactive clients with reboot')
@@ -171,7 +171,7 @@ def clean_snapshot(output, cache_config, name, force=False):
         else:
             logging.warning('Continuing as requested')
 
-    ipxe_config = ipxe.ipxe_config_filename(output, target_name)
+    ipxe_config = ipxe.config_filename(output, target_name)
     if os.path.exists(ipxe_config):
         logging.info('Cleaning iPXE config at %s', ipxe_config)
         os.remove(ipxe_config)

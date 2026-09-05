@@ -6,15 +6,15 @@ import socket
 from dg.prepare.util import transactions
 
 
-def ipxe_config_filename(output, iscsi_target_name):
+def config_filename(output, iscsi_target_name):
     return os.path.join(output, f'{iscsi_target_name}.ipxe')
 
 
 @contextlib.contextmanager
-def generate_ipxe_config(output, iscsi_target_name, kernel, initrd):
+def generate_config(output, iscsi_target_name, kernel, initrd):
     kernel_path = os.path.relpath(kernel, output)
     initrd_path = os.path.relpath(initrd, output)
-    config_path = ipxe_config_filename(output, iscsi_target_name)
+    config_path = config_filename(output, iscsi_target_name)
     with open(config_path, 'w') as config_output:
         config_output.write('\n'.join([
             '#!ipxe',
@@ -82,7 +82,7 @@ def release_filename(output, testing=False):
 
 
 @contextlib.contextmanager
-def released_ipxe_config(output, config, testing=False):
+def released_config(output, config, testing=False):
     release = release_filename(output, testing)
     logging.info(f'Publishing{" testing" if testing else ""} iPXE config '
                  '%s to %s', config, release)
