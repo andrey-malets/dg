@@ -52,9 +52,11 @@ def generate_ipxe_config(output, iscsi_target_name, kernel, initrd):
 @contextlib.contextmanager
 def saved_config(path):
     old_path = f'{path}.old'
-    if os.path.exists(old_path):
-        logging.warning('Old config %s exists, removing', old_path)
+    try:
         os.remove(old_path)
+        logging.warning('Old config %s existed, removed it', old_path)
+    except FileNotFoundError:
+        pass
 
     if not os.path.exists(path):
         logging.warning('%s does not exist', path)
@@ -69,7 +71,10 @@ def saved_config(path):
             os.rename(old_path, path)
         raise
     else:
-        os.remove(old_path)
+        try:
+            os.remove(old_path)
+        except FileNotFoundError:
+            pass
 
 
 @contextlib.contextmanager
