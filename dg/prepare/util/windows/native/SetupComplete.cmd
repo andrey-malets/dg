@@ -28,6 +28,8 @@ exit /b
 
 :finish_setup
   net user Administrator /active:yes
+  netsh advfirewall set allprofiles state off
+  net start sshd
 exit /b
 
 :main
