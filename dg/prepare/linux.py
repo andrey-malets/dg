@@ -136,14 +136,14 @@ def add_snapshot(args):
         ))
 
         snapshot_stack.enter_context(vm.reset_back_on_failure(vmm, test_vm))
-        snapshot_stack.enter_context(ipxe.published_ipxe_config(
+        snapshot_stack.enter_context(ipxe.released_ipxe_config(
             args.output, ipxe_config, testing=True
         ))
         reboot_and_check_test_vm(vmm, test_vm, timestamp)
         ipxe_config = snapshot_stack.enter_context(
-            ipxe.published_ipxe_config(args.output, ipxe_config)
+            ipxe.released_ipxe_config(args.output, ipxe_config)
         )
-        logging.info('Published iPXE config to %s', ipxe_config)
+        logging.info('Released iPXE config to %s', ipxe_config)
 
     if args.push:
         logging.info('Pushing update to inactive clients with reboot')
