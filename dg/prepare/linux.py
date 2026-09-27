@@ -54,7 +54,7 @@ def reboot_and_check_test_vm(vmm, vm, timestamp):
         logging.warning('%s is not accessble', vm.host)
         vmm.reset(vm)
 
-    wait.wait_for(lambda: booted_properly(vm, timestamp), timeout=180, step=10)
+    wait.wait_for(lambda: booted_properly(vm, timestamp), timeout=300, step=10)
 
 
 def get_snapshots(vmm, vm):
