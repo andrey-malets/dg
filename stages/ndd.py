@@ -1,10 +1,29 @@
 import contextlib
+import logging
 import os
 import subprocess
+
+from tenacity import (
+    after_log,
+    retry,
+    retry_if_exception_type,
+    stop_after_attempt
+)
 
 from clients import config as cfg
 from common import config, stage
 from util import proc
+
+
+class NddError(Exception):
+
+    def __init__(self, cmdline, rv, stdout):
+        super().__init__(
+            f'ndd command {cmdline} returned non-zero exit code {rv}'
+        )
+        self.cmdline = cmdline
+        self.rv = rv
+        self.stdout = stdout
 
 
 @contextlib.contextmanager
@@ -52,6 +71,16 @@ class RunNDD(config.WithLocalAddress, config.WithNDDArgs, config.WithConfigURL,
         return (host.props.get('switch'), host.name)
 
     def run(self, state):
+        @retry(stop=stop_after_attempt(5),
+               retry=retry_if_exception_type(NddError),
+               after=after_log(state.log, logging.WARNING))
+        def run_impl(cmdline):
+            rv, stdout = proc.run_process(cmdline, state.log)
+            if rv != 0:
+                raise NddError(cmdline, rv, stdout)
+            else:
+                return rv, stdout
+
         for spec in self.ndds:
             with self.prepared_input(spec.input_, spec.iargs, state.log) \
                     as input_:
@@ -80,7 +109,11 @@ class RunNDD(config.WithLocalAddress, config.WithNDDArgs, config.WithConfigURL,
                         ['-d', '{}@{}'.format(self.get_login(),
                                               str(host.name))])
 
-                rv, stdout = proc.run_process(cmdline, state.log)
+                try:
+                    rv, stdout = run_impl(cmdline)
+                except NddError as e:
+                    rv, stdout = e.rv, e.stdout
+
                 for line in stdout.splitlines():
                     logger = (
                         state.log.info if rv == 0 else state.log.warning

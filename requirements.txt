@@ -2,4 +2,5 @@ flake8==7.3.0
 mccabe==0.7.0
 pycodestyle==2.14.0
 pyflakes==3.4.0
+tenacity==9.1.4
 termcolor==3.3.0
